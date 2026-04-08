@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Database stack: 3 cylinders built from rects + ellipses -->
+  <!-- Bottom cylinder walls -->
+  <rect x="25" y="57" width="50" height="14" fill="#111318"/>
+  <ellipse cx="50" cy="71" rx="25" ry="7" fill="#111318" stroke="#d4af37" stroke-width="3"/>
+  <ellipse cx="50" cy="57" rx="25" ry="7" fill="#1c1f2a" stroke="#d4af37" stroke-width="3"/>
+  <!-- Left + right walls for bottom cylinder -->
+  <rect x="25" y="57" width="2.5" height="14" fill="#d4af37"/>
+  <rect x="72.5" y="57" width="2.5" height="14" fill="#d4af37"/>
+  <!-- Middle cylinder -->
+  <rect x="25" y="43" width="50" height="14" fill="#111318"/>
+  <ellipse cx="50" cy="57" rx="25" ry="7" fill="#1c1f2a" stroke="#d4af37" stroke-width="3"/>
+  <ellipse cx="50" cy="43" rx="25" ry="7" fill="#1c1f2a" stroke="#d4af37" stroke-width="3"/>
+  <rect x="25" y="43" width="2.5" height="14" fill="#d4af37"/>
+  <rect x="72.5" y="43" width="2.5" height="14" fill="#d4af37"/>
+  <!-- Top cylinder -->
+  <rect x="25" y="29" width="50" height="14" fill="#111318"/>
+  <ellipse cx="50" cy="43" rx="25" ry="7" fill="#1c1f2a" stroke="#d4af37" stroke-width="3"/>
+  <ellipse cx="50" cy="29" rx="25" ry="7" fill="#d4af37" stroke="#d4af37" stroke-width="3"/>
+  <rect x="25" y="29" width="2.5" height="14" fill="#d4af37"/>
+  <rect x="72.5" y="29" width="2.5" height="14" fill="#d4af37"/>
+</svg>

@@ -1,86 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+  <meta charset="UTF-8">
   <title>Yiannis Hadjicharalambous</title>
-  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #ffffff;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 30px 0;
-    display: flex;
-    gap: 30px;
-  }
-
-  #chess {
-    margin-top: 20px;
-    width: min(90vw, 480px);
-  }
-
-  #chess table {
-    width: 100%;
-  }
-
-  #chess th {
-    position: relative;
-    width: 12.5%;
-    aspect-ratio: 1 / 1;
-    padding: 0;
-    overflow: hidden;
-  }
-
-  #chess th::before {
-    content: attr(data-piece);
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(22px, 5vw, 48px);
-    line-height: 1;
-    pointer-events: none;
-  }
-</style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-  <!-- Social links -->
-  <ul>
-    <li>
-      <a href="https://github.com/yiannis-had" target="_blank">
-        <img src="img/github.png" alt="GitHub">
-      </a>
-    </li>
-    <li>
-      <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#97;&#105;&#108;&#64;&#121;&#105;&#97;&#110;&#110;&#105;&#115;&#46;&#99;&#121;" target="_blank">
-        <img src="img/mail.png" alt="Mail">
-      </a>
-    </li>
-    <li>
-      <a href="https://www.linkedin.com/in/yiannis-had/" target="_blank">
-        <img src="img/linkedin.png" alt="LinkedIn">
-      </a>
-    </li>
-  </ul>
 
-  <!-- Chessboard container -->
-  <div id="chess"></div>
+  <div class="container">
+    <header>
+      <h1>Yiannis Hadjicharalambous</h1>
+      <p class="subtitle">Software Engineer</p>
+    </header>
 
-  <!-- Chess script -->
-  <script>
-for(B=i=y=u=b=i=0,x=10,z=15,I=[],l=[];l[B]="ustvrtsuqqqqqqqqyyyyyyyy}{|~z|{}@G@TSb~?A6J57IKJT576,+-48HLSUmgukgg OJNMLK  IDHGFE".charCodeAt(B)-64,B++<120;I[B-1]=B%x?B/x%x<2|B%x<2?7:B/x&4?0:l[u++]:7);function X(e,t,u,i,r){e^=8;for(var n,o,f,c,d,h,q,a,s,g,m,T=20,H=-1e8,J=i&&X(e,0)>1e4,L=78-t<<9,M=e?x:-x;++T<99;)if((o=I[n=T])&&(h=o&z^e)<7){m=2&h--?8:4,s=9-o&z?l[61+h]:49;do{if(g=I[n+=l[s]],a=d=h|n+M-u?0:u,!g&&(h||m<3||a)||(1+g&z^e)>9&&h|m>2){if(!(2-g&7))return L;for(c=q=h|I[n-M]-7?o&z:6^e;c;c=!(c||J||(a=n,d=n<T?a-3:a+2,I[d]<z|I[d+T-n]|I[n+=n-T]))){if(f=(g&&2*l[7&g|32]-t-h)+(h?0:q-o&z?110:(d&&14)+(m<2)+1),i>t||1<i&i==t&&f>2|J){if(I[n]=q,I[a]=I[d],I[T]=d?I[d]=0:0,f-=X(e,t+1,c=h|m>1?0:n,i,f-H),!(t||i-1|B-T|n-b|f<-1e4))return W(y=c),e&&setTimeout("X(8,0,y,2),X(8,0,y,1)",555);c=1-h|m<7|d|!i|g|o<z||X(e,0)>1e4,I[T]=o,I[n]=g,I[d]=I[a],d&&(I[a]=h?0:9^e)}if((f>H||!t&f==H&&Math.random()<.5)&&(H=f,i>1&&(t?r-f<0:(B=T,b=n,0))))return H}}}while(!g&h>2||(n=T,h|m>2|z<o&!g&&++s*--m))}return 768-L<H|J&&H}function W(){for(i="<table>",u=18;u<98;document.getElementById("chess").innerHTML=i+=++u%x-9?"<th width=60 height=60 onclick='I[b="+u+"]&8?W():X(0,0,y,1)' style='font-size:50px' bgcolor=#"+(u-B?.9*u&1||9:"d")+"0f0e0 data-piece='&#"+(15&I[u]?9808+l[67+(15&I[u])]:160)+";'>":u++&&"<tr>");B=b}W();
-  </script>
+    <ul class="social-links">
+      <li>
+        <a href="https://github.com/yiannis-had" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.577.688.479C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+          </svg>
+        </a>
+      </li>
+      <li>
+        <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#97;&#105;&#108;&#64;&#121;&#105;&#97;&#110;&#110;&#105;&#115;&#46;&#99;&#121;"
+          aria-label="Email">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 4.712v-9.458l4.623 4.746zm1.09 1.124l3.787 3.906c.264.272.61.408.956.408s.692-.136.956-.408l3.787-3.906 5.093 5.221h-19.672l5.093-5.221zm14.287 3.588l-4.623-4.712 4.623-4.746v9.458zm-20-10.641h19.53l-9.765 10.062-9.765-10.062z" />
+          </svg>
+        </a>
+      </li>
+      <li>
+        <a href="https://www.linkedin.com/in/yiannis-had/" target="_blank" rel="noopener noreferrer"
+          aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+          </svg>
+        </a>
+      </li>
+    </ul>
+  </div>
 
 </body>
+
 </html>
