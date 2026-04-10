@@ -1,57 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Yiannis Hadjicharalambous</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "b10bde8530d945c68f2d94f6f76ed866"}'></script>
-<style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #ffffff;
-  }
+  <script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+    data-cf-beacon='{"token": "b10bde8530d945c68f2d94f6f76ed866"}'></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #ffffff;
+    }
 
-  ul {
-    list-style: none;
-    padding: 0;
-    margin: 30px 0;
-    display: flex;
-    gap: 30px;
-  }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 30px 0;
+      display: flex;
+      gap: 30px;
+    }
 
-  #chess {
-    margin-top: 20px;
-    width: min(90vw, 480px);
-  }
+    #chess {
+      margin-top: 20px;
+      width: min(90vw, 480px);
+    }
 
-  #chess table {
-    width: 100%;
-  }
+    #chess table {
+      width: 100%;
+    }
 
-  #chess th {
-    position: relative;
-    width: 12.5%;
-    aspect-ratio: 1 / 1;
-    padding: 0;
-    overflow: hidden;
-  }
+    #chess th {
+      position: relative;
+      width: 12.5%;
+      aspect-ratio: 1 / 1;
+      padding: 0;
+      overflow: hidden;
+    }
 
-  #chess th::before {
-    content: attr(data-piece);
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: clamp(22px, 5vw, 48px);
-    line-height: 1;
-    pointer-events: none;
-  }
-</style>
+    #chess th::before {
+      content: attr(data-piece);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(22px, 5vw, 48px);
+      line-height: 1;
+      pointer-events: none;
+    }
+  </style>
 </head>
 
 <body>
@@ -63,7 +65,8 @@
       </a>
     </li>
     <li>
-      <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#97;&#105;&#108;&#64;&#121;&#105;&#97;&#110;&#110;&#105;&#115;&#46;&#99;&#121;" target="_blank">
+      <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#109;&#97;&#105;&#108;&#64;&#121;&#105;&#97;&#110;&#110;&#105;&#115;&#46;&#99;&#121;"
+        target="_blank">
         <img src="img/mail.png" alt="Mail">
       </a>
     </li>
@@ -79,8 +82,9 @@
 
   <!-- Chess script -->
   <script>
-for(B=i=y=u=b=i=0,x=10,z=15,I=[],l=[];l[B]="ustvrtsuqqqqqqqqyyyyyyyy}{|~z|{}@G@TSb~?A6J57IKJT576,+-48HLSUmgukgg OJNMLK  IDHGFE".charCodeAt(B)-64,B++<120;I[B-1]=B%x?B/x%x<2|B%x<2?7:B/x&4?0:l[u++]:7);function X(e,t,u,i,r){e^=8;for(var n,o,f,c,d,h,q,a,s,g,m,T=20,H=-1e8,J=i&&X(e,0)>1e4,L=78-t<<9,M=e?x:-x;++T<99;)if((o=I[n=T])&&(h=o&z^e)<7){m=2&h--?8:4,s=9-o&z?l[61+h]:49;do{if(g=I[n+=l[s]],a=d=h|n+M-u?0:u,!g&&(h||m<3||a)||(1+g&z^e)>9&&h|m>2){if(!(2-g&7))return L;for(c=q=h|I[n-M]-7?o&z:6^e;c;c=!(c||J||(a=n,d=n<T?a-3:a+2,I[d]<z|I[d+T-n]|I[n+=n-T]))){if(f=(g&&2*l[7&g|32]-t-h)+(h?0:q-o&z?110:(d&&14)+(m<2)+1),i>t||1<i&i==t&&f>2|J){if(I[n]=q,I[a]=I[d],I[T]=d?I[d]=0:0,f-=X(e,t+1,c=h|m>1?0:n,i,f-H),!(t||i-1|B-T|n-b|f<-1e4))return W(y=c),e&&setTimeout("X(8,0,y,2),X(8,0,y,1)",555);c=1-h|m<7|d|!i|g|o<z||X(e,0)>1e4,I[T]=o,I[n]=g,I[d]=I[a],d&&(I[a]=h?0:9^e)}if((f>H||!t&f==H&&Math.random()<.5)&&(H=f,i>1&&(t?r-f<0:(B=T,b=n,0))))return H}}}while(!g&h>2||(n=T,h|m>2|z<o&!g&&++s*--m))}return 768-L<H|J&&H}function W(){for(i="<table>",u=18;u<98;document.getElementById("chess").innerHTML=i+=++u%x-9?"<th width=60 height=60 onclick='I[b="+u+"]&8?W():X(0,0,y,1)' style='font-size:50px' bgcolor=#"+(u-B?.9*u&1||9:"d")+"0f0e0 data-piece='&#"+(15&I[u]?9808+l[67+(15&I[u])]:160)+";'>":u++&&"<tr>");B=b}W();
+    for (B = i = y = u = b = i = 0, x = 10, z = 15, I = [], l = []; l[B] = "ustvrtsuqqqqqqqqyyyyyyyy}{|~z|{}@G@TSb~?A6J57IKJT576,+-48HLSUmgukgg OJNMLK  IDHGFE".charCodeAt(B) - 64, B++ < 120; I[B - 1] = B % x ? B / x % x < 2 | B % x < 2 ? 7 : B / x & 4 ? 0 : l[u++] : 7); function X(e, t, u, i, r) { e ^= 8; for (var n, o, f, c, d, h, q, a, s, g, m, T = 20, H = -1e8, J = i && X(e, 0) > 1e4, L = 78 - t << 9, M = e ? x : -x; ++T < 99;)if ((o = I[n = T]) && (h = o & z ^ e) < 7) { m = 2 & h-- ? 8 : 4, s = 9 - o & z ? l[61 + h] : 49; do { if (g = I[n += l[s]], a = d = h | n + M - u ? 0 : u, !g && (h || m < 3 || a) || (1 + g & z ^ e) > 9 && h | m > 2) { if (!(2 - g & 7)) return L; for (c = q = h | I[n - M] - 7 ? o & z : 6 ^ e; c; c = !(c || J || (a = n, d = n < T ? a - 3 : a + 2, I[d] < z | I[d + T - n] | I[n += n - T]))) { if (f = (g && 2 * l[7 & g | 32] - t - h) + (h ? 0 : q - o & z ? 110 : (d && 14) + (m < 2) + 1), i > t || 1 < i & i == t && f > 2 | J) { if (I[n] = q, I[a] = I[d], I[T] = d ? I[d] = 0 : 0, f -= X(e, t + 1, c = h | m > 1 ? 0 : n, i, f - H), !(t || i - 1 | B - T | n - b | f < -1e4)) return W(y = c), e && setTimeout("X(8,0,y,2),X(8,0,y,1)", 555); c = 1 - h | m < 7 | d | !i | g | o < z || X(e, 0) > 1e4, I[T] = o, I[n] = g, I[d] = I[a], d && (I[a] = h ? 0 : 9 ^ e) } if ((f > H || !t & f == H && Math.random() < .5) && (H = f, i > 1 && (t ? r - f < 0 : (B = T, b = n, 0)))) return H } } } while (!g & h > 2 || (n = T, h | m > 2 | z < o & !g && ++s * --m)) } return 768 - L < H | J && H } function W() { for (i = "<table>", u = 18; u < 98; document.getElementById("chess").innerHTML = i += ++u % x - 9 ? "<th width=60 height=60 onclick='I[b=" + u + "]&8?W():X(0,0,y,1)' style='font-size:50px' bgcolor=#" + (u - B ? .9 * u & 1 || 9 : "d") + "0f0e0 data-piece='&#" + (15 & I[u] ? 9808 + l[67 + (15 & I[u])] : 160) + ";'>" : u++ && "<tr>"); B = b } W();
   </script>
 
 </body>
+
 </html>
