@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Yiannis Hadjicharalambous — Zed</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+        <link rel="stylesheet" href="../../styles.css" />
+        <script src="../snippet.js" defer></script>
+    </head>
+    <body class="page-config">
+        <div class="container container-wide">
+            <a href=".." class="back">&larr; back</a>
+            <h1>zed</h1>
+
+            <div class="snippet-section">
+                <div class="snippet-header">
+                    <button
+                        class="snippet-btn toggle-btn"
+                        onclick="toggleSnippet(this)"
+                        aria-label="Toggle python.json"
+                    >
+                        &#9654;
+                    </button>
+                    <span class="snippet-label">python.json</span>
+                    <button
+                        class="snippet-btn copy-btn"
+                        onclick="copySnippet(this)"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <pre class="snippet-body">
+{
+  "Class": {
+    "prefix": "py-class",
+    "body": [
+      "class ${1:NewClass}:",
+      "    \"\"\"${2:TODO: docstring}\"\"\"",
+      "",
+      "    def __init__(self$3) -> None:",
+      "        ${4:...}"
+    ]
+  },
+  "For loop": {
+    "prefix": "py-for",
+    "body": [
+      "for ${2:item} in ${1:iterable}:",
+      "    ${3:...}"
+    ]
+  },
+  "Function": {
+    "prefix": "py-def",
+    "body": [
+      "def ${1:new_function}($2) -> ${3:None}:",
+      "    \"\"\"${4:TODO: docstring}\"\"\"",
+      "    ${5:...}"
+    ]
+  },
+  "Main entry point": {
+    "prefix": "py-main",
+    "body": [
+      "if __name__ == '__main__':",
+      "    ${1:...}",
+      ""
+    ]
+  },
+  "Try/except block": {
+    "prefix": "py-try",
+    "body": [
+      "try:",
+      "    ${1:...}",
+      "except Exception as e:",
+      "    print(f'{type(e).__name__}: {e}')"
+    ]
+  },
+  "With statement": {
+    "prefix": "py-with",
+    "body": [
+      "with ${1:expr} as ${2:var}:",
+      "    ${3:...}"
+    ]
+  }
+}</pre>
+            </div>
+
+            <div class="snippet-section">
+                <div class="snippet-header">
+                    <button
+                        class="snippet-btn toggle-btn"
+                        onclick="toggleSnippet(this)"
+                        aria-label="Toggle settings.json"
+                    >
+                        &#9654;
+                    </button>
+                    <span class="snippet-label">settings.json</span>
+                    <button
+                        class="snippet-btn copy-btn"
+                        onclick="copySnippet(this)"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <pre class="snippet-body">
+{
+  "base_keymap": "VSCode",
+  "colorize_brackets": true,
+  "inlay_hints": {
+    "enabled": true
+  },
+  "minimap": {
+    "show": "auto"
+  },
+  "show_signature_help_after_edits": true,
+  "soft_wrap": "editor_width",
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "One Dark"
+  }
+}</pre>
+            </div>
+        </div>
+    </body>
+</html>

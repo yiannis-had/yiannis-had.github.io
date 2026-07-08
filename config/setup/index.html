@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Yiannis Hadjicharalambous — Setup</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+        <link rel="stylesheet" href="../../styles.css" />
+        <script src="../snippet.js" defer></script>
+    </head>
+    <body class="page-config">
+        <div class="container container-wide">
+            <a href=".." class="back">&larr; back</a>
+            <h1>setup</h1>
+
+            <div class="snippet-section">
+                <div class="snippet-header">
+                    <button
+                        class="snippet-btn toggle-btn"
+                        onclick="toggleSnippet(this)"
+                        aria-label="Toggle debian.sh"
+                    >
+                        &#9654;
+                    </button>
+                    <span class="snippet-label">debian.sh</span>
+                    <button
+                        class="snippet-btn copy-btn"
+                        onclick="copySnippet(this)"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <pre class="snippet-body">
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+# Update system and install base packages
+sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y make build-essential git htop tmux jq ncdu pigz pv zip unzip curl wget gpg llvm
+sudo apt-get install -y vim tree gufw shellcheck tldr copyq bleachbit aptitude synaptic fastfetch gnome-tweaks gnome-shell-extensions dconf-editor
+
+# GNOME extensions
+gnome-extensions enable dash-to-dock@micxgx.gmail.com                   # https://extensions.gnome.org/extension/307/
+gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com          # https://extensions.gnome.org/extension/615/
+gnome-extensions enable ding@rastersoft.com                             # https://extensions.gnome.org/extension/2087/
+gnome-extensions enable another-window-session-manager@gmail.com        # https://extensions.gnome.org/extension/4709/
+
+# Add user to sudoers with NOPASSWD
+echo "$USER ALL=(ALL:ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USER
+sudo chmod 0440 /etc/sudoers.d/$USER
+sudo visudo -c
+
+# Update default editor to Vim
+sudo update-alternatives --set editor /usr/bin/vim.basic
+
+# Grub timeout duration
+sudo sed -i "s/GRUB_TIMEOUT=[0-9]*/GRUB_TIMEOUT=2/" "/etc/default/grub" && sudo update-grub
+
+# Zsh & Fonts
+sudo apt-get install -y zsh fonts-powerline
+sudo chsh -s "$(which zsh)" "$USER"
+
+# Ohmyzsh https://ohmyz.sh/
+RUNZSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Ohmyzsh Plugins
+git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autocomplete"
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+
+# Configure .zshrc
+ZSHRC_FILE="$HOME/.zshrc"
+OLD_PLUGINS="plugins=(git)"
+NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)"
+sed -i "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
+sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
+sed -i "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
+echo 'export PATH=$PATH:/usr/sbin' >> "$ZSHRC_FILE"
+
+# Flatpak
+sudo apt-get install -y flatpak gnome-software-plugin-flatpak
+sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+# Discord https://flathub.org/apps/com.discordapp.Discord
+flatpak install -y flathub com.discordapp.Discord
+
+# Librewolf https://librewolf.net/installation/debian/
+sudo apt-get update && sudo apt-get install -y extrepo
+sudo extrepo enable librewolf
+sudo apt-get update && sudo apt-get install -y librewolf
+
+# Prepare secure keyrings directory
+sudo install -m 0755 -d /etc/apt/keyrings
+
+# Spotify https://www.spotify.com/us/download/linux/
+curl -fsSL https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor --yes -o /etc/apt/keyrings/spotify.gpg
+sudo chmod a+r /etc/apt/keyrings/spotify.gpg
+echo "deb [signed-by=/etc/apt/keyrings/spotify.gpg] https://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
+sudo apt-get update && sudo apt-get install -y spotify-client
+
+# Docker https://docs.docker.com/engine/install/debian/
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo groupadd -f docker
+sudo usermod -aG docker "$USER"</pre>
+            </div>
+
+            <div class="snippet-section">
+                <div class="snippet-header">
+                    <button
+                        class="snippet-btn toggle-btn"
+                        onclick="toggleSnippet(this)"
+                        aria-label="Toggle macos.sh"
+                    >
+                        &#9654;
+                    </button>
+                    <span class="snippet-label">macos.sh</span>
+                    <button
+                        class="snippet-btn copy-btn"
+                        onclick="copySnippet(this)"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <pre class="snippet-body">
+#!/usr/bin/env zsh
+
+cd "$HOME"
+
+set -eo pipefail
+
+# Privileges and hostnames
+echo "$USER ALL=(ALL:ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USER
+sudo chmod 0440 /etc/sudoers.d/$USER
+sudo visudo -c
+
+sudo spctl --master-disable
+
+sudo scutil --set HostName "macbook"
+sudo scutil --set LocalHostName "macbook"
+sudo scutil --set ComputerName "macbook"
+dscacheutil -flushcache
+
+# Install Homebrew
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Configure Homebrew path for immediate use
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Install brew formulas and casks
+brew install fastfetch
+brew install ncdu
+
+brew install --cask iterm2
+brew install --cask docker
+brew install --cask zed
+brew install --cask discord
+brew install --cask spotify
+
+# Install Oh My Zsh
+RUNZSH=no /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Install Powerline Fonts
+git clone --depth=1 https://github.com/powerline/fonts.git
+cd fonts
+./install.sh
+cd ..
+rm -rf fonts
+
+# Install Zsh Plugins
+git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autocomplete"
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+
+# Update .zshrc configuration
+ZSHRC_FILE="$HOME/.zshrc"
+OLD_PLUGINS="plugins=(git)"
+NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)"
+
+sed -i '' "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
+sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
+sed -i '' "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
+echo 'export PATH=$PATH:/usr/sbin' >> "$ZSHRC_FILE"
+
+# Display sleep timers on battery and wall power (in minutes)
+sudo pmset -b displaysleep 5
+sudo pmset -c displaysleep 5
+
+# Require password immediately when screen turns off or screensaver starts
+defaults write com.apple.screensaver askForPassword -int 1
+defaults write com.apple.screensaver askForPasswordDelay -int 0
+
+# Don't write .DS_Store on USB or network volumes
+defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+
+# Continuous key repeat
+defaults write -g ApplePressAndHoldEnabled -bool false
+
+# Key repeat rate (fastest) and delay until repeat (shortest)
+defaults write -g KeyRepeat -int 2
+defaults write -g InitialKeyRepeat -int 15
+
+# Spelling and auto-correction
+defaults write -g NSAutomaticSpellingCorrectionEnabled -bool false
+defaults write -g NSAutomaticCapitalizationEnabled -bool false
+defaults write -g NSAutomaticQuoteSubstitutionEnabled -bool false
+defaults write -g NSAutomaticDashSubstitutionEnabled -bool false
+defaults write -g NSAutomaticPeriodSubstitutionEnabled -bool false
+defaults write -g NSAutomaticTextCompletionEnabled -bool false
+
+# Set trackpad click pressure weight (1 = Medium)
+defaults write com.apple.AppleMultitouchTrackpad FirstClickThreshold -int 1
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad FirstClickThreshold -int 1
+
+# Tap to Click
+defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool true
+defaults -currentHost write -g com.apple.mouse.tapBehavior -int 1
+
+# Disable trackpad force click and haptic feedback
+defaults write com.apple.AppleMultitouchTrackpad ActuateDetents -int 0
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad ActuateDetents -int 0
+defaults -currentHost write -g com.apple.trackpad.forceClick -int 0
+
+# Three-Finger Drag (text selection)
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
+defaults -currentHost write -g com.apple.trackpad.threeFingerDragGesture -int 1
+
+# Three-Finger Tap for Look Up
+defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 2
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerTapGesture -int 2
+defaults -currentHost write -g com.apple.trackpad.threeFingerTapGesture -int 2
+
+# Natural scrolling, trackpad zooming, and rotations
+defaults write -g com.apple.swipescrolldirection -bool true
+defaults write com.apple.AppleMultitouchTrackpad TrackpadPinch -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadPinch -bool true
+defaults write com.apple.AppleMultitouchTrackpad TrackpadRotate -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadRotate -bool true
+defaults write com.apple.AppleMultitouchTrackpad TrackpadTwoFingerDoubleTapGesture -bool true
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadTwoFingerDoubleTapGesture -bool true
+
+# Swipe between pages with two fingers
+defaults write -g AppleEnableSwipeNavigateWithScrolls -bool true
+defaults write -g AppleEnableMouseSwipeNavigateWithScrolls -bool true
+
+# Swipe between desktops with four fingers
+defaults write com.apple.AppleMultitouchTrackpad TrackpadFourFingerHorizSwipeGesture -int 2
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadFourFingerHorizSwipeGesture -int 2
+defaults -currentHost write -g com.apple.trackpad.fourFingerHorizSwipeGesture -int 2
+
+# Mission Control & App Expose with four-finger vertical swipes
+defaults write com.apple.AppleMultitouchTrackpad TrackpadFourFingerVertSwipeGesture -int 2
+defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadFourFingerVertSwipeGesture -int 2
+defaults -currentHost write -g com.apple.trackpad.fourFingerVertSwipeGesture -int 2
+
+# System Behaviour
+defaults write -g AppleInterfaceStyle -string "Dark"
+defaults write -g AppleLanguages -array "en-CY" "el-CY"
+defaults write -g AppleLocale -string "en_CY"
+defaults write -g AppleMeasurementUnits -string "Centimeters"
+defaults write -g AppleMetricUnits -bool true
+defaults write -g AppleICUForce24HourTime -bool true
+defaults write -g AppleScrollerPagingBehavior -bool true
+
+# Dock
+defaults write com.apple.dock autohide -bool true
+defaults write com.apple.dock tilesize -int 60
+defaults write com.apple.dock wvous-bl-corner -int 4
+defaults write com.apple.dock wvous-bl-modifier -int 0
+
+# Desktop and Window Manager
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
+defaults write com.apple.WindowManager StandardHideWidgets -bool true
+defaults write com.apple.WindowManager StageManagerHideWidgets -bool true
+
+# Finder layout and display
+defaults write com.apple.finder AppleShowAllFiles -bool true
+defaults write com.apple.finder ShowPathbar -bool true
+defaults write com.apple.finder ShowStatusBar -bool true
+defaults write com.apple.finder _FXSortFoldersFirst -bool true
+defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+defaults write com.apple.finder NewWindowTarget -string "PfHm"
+defaults write com.apple.finder NewWindowTargetPath -string "file://${HOME}/"
+defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
+defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
+defaults write -g AppleShowAllExtensions -bool true
+
+# Relaunch services
+killall Finder
+killall Dock</pre>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Yiannis Hadjicharalambous — Git</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+        <link rel="stylesheet" href="../../styles.css" />
+        <script src="../snippet.js" defer></script>
+    </head>
+    <body class="page-config">
+        <div class="container container-wide">
+            <a href=".." class="back">&larr; back</a>
+            <h1>git</h1>
+
+            <div class="snippet-section">
+                <div class="snippet-header">
+                    <button
+                        class="snippet-btn toggle-btn"
+                        onclick="toggleSnippet(this)"
+                        aria-label="Toggle .gitconfig"
+                    >
+                        &#9660;
+                    </button>
+                    <span class="snippet-label">
+                        <a
+                            href="https://softwaredoug.com/blog/2022/11/09/idiot-proof-git-aliases.html"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            >.gitconfig</a
+                        >
+                    </span>
+                    <button
+                        class="snippet-btn copy-btn"
+                        onclick="copySnippet(this)"
+                    >
+                        Copy
+                    </button>
+                </div>
+                <pre class="snippet-body open">
+[alias]
+    mainbranch = "!git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+    synced = "!git pull origin $(git mainbranch) --rebase"
+    update = "!git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase"
+    squash = "!git rebase -v -i $(git mainbranch)"
+    publish = push origin HEAD --force-with-lease
+    pub = publish</pre>
+            </div>
+        </div>
+    </body>
+</html>
