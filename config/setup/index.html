@@ -76,7 +76,6 @@ NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-auto
 sed -i "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
 sed -i "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
-echo 'export PATH=$PATH:/usr/sbin' >> "$ZSHRC_FILE"
 
 # Flatpak
 sudo apt-get install -y flatpak gnome-software-plugin-flatpak
@@ -133,64 +132,32 @@ sudo usermod -aG docker "$USER"</pre>
 
 cd "$HOME"
 
+setopt interactivecomments
 set -eo pipefail
 
-# Privileges and hostnames
+# Sudo without password
 echo "$USER ALL=(ALL:ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USER
 sudo chmod 0440 /etc/sudoers.d/$USER
 sudo visudo -c
 
+# Disable Gatekeeper
 sudo spctl --master-disable
 
+# Set hostnames
 sudo scutil --set HostName "macbook"
 sudo scutil --set LocalHostName "macbook"
 sudo scutil --set ComputerName "macbook"
 dscacheutil -flushcache
 
-# Install Homebrew
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Configure Homebrew path for immediate use
-eval "$(/opt/homebrew/bin/brew shellenv)"
-
-# Install brew formulas and casks
-brew install fastfetch
-brew install ncdu
-
-brew install --cask iterm2
-brew install --cask docker
-brew install --cask zed
-brew install --cask discord
-brew install --cask spotify
-
-# Install Oh My Zsh
-RUNZSH=no /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-# Install Powerline Fonts
-git clone --depth=1 https://github.com/powerline/fonts.git
-cd fonts
-./install.sh
-cd ..
-rm -rf fonts
-
-# Install Zsh Plugins
-git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autocomplete"
-git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
-git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
-
-# Update .zshrc configuration
-ZSHRC_FILE="$HOME/.zshrc"
-OLD_PLUGINS="plugins=(git)"
-NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)"
-
-sed -i '' "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
-sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
-sed -i '' "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
-echo 'export PATH=$PATH:/usr/sbin' >> "$ZSHRC_FILE"
+# Mute startup sound
+sudo nvram StartupMute=%01
 
 # Display sleep timers on battery and wall power (in minutes)
 sudo pmset -b displaysleep 5
 sudo pmset -c displaysleep 5
+
+# Battery percentage in the menu bar
+defaults -currentHost write com.apple.controlcenter.plist BatteryShowPercentage -bool true
 
 # Require password immediately when screen turns off or screensaver starts
 defaults write com.apple.screensaver askForPassword -int 1
@@ -232,7 +199,7 @@ defaults -currentHost write -g com.apple.trackpad.forceClick -int 0
 # Three-Finger Drag (text selection)
 defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerDrag -bool true
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadThreeFingerDrag -bool true
-defaults -currentHost write -g com.apple.trackpad.threeFingerDragGesture -int 1
+defaults -currentHost write -g com.apple.trackpad.threeFingerDragGesture -bool true
 
 # Three-Finger Tap for Look Up
 defaults write com.apple.AppleMultitouchTrackpad TrackpadThreeFingerTapGesture -int 2
@@ -258,6 +225,7 @@ defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadFourFi
 defaults -currentHost write -g com.apple.trackpad.fourFingerHorizSwipeGesture -int 2
 
 # Mission Control & App Expose with four-finger vertical swipes
+defaults write com.apple.dock showAppExposeGestureEnabled -bool true
 defaults write com.apple.AppleMultitouchTrackpad TrackpadFourFingerVertSwipeGesture -int 2
 defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad TrackpadFourFingerVertSwipeGesture -int 2
 defaults -currentHost write -g com.apple.trackpad.fourFingerVertSwipeGesture -int 2
@@ -271,16 +239,31 @@ defaults write -g AppleMetricUnits -bool true
 defaults write -g AppleICUForce24HourTime -bool true
 defaults write -g AppleScrollerPagingBehavior -bool true
 
+# Keyboard sources
+defaults write com.apple.HIToolbox AppleEnabledInputSources -array \
+    '{ InputSourceKind = "Keyboard Layout"; "KeyboardLayout ID" = "-18944"; "KeyboardLayout Name" = Greek; }' \
+    '{ Bundle ID = "com.apple.CharacterPaletteIM"; InputSourceKind = "Non Keyboard Input Method"; }' \
+    '{ Bundle ID = "com.apple.PressAndHold"; InputSourceKind = "Non Keyboard Input Method"; }' \
+    '{ InputSourceKind = "Keyboard Layout"; "KeyboardLayout ID" = 250; "KeyboardLayout Name" = "British-PC"; }'
+defaults write com.apple.HIToolbox AppleSelectedInputSources -array \
+    '{ Bundle ID = "com.apple.PressAndHold"; InputSourceKind = "Non Keyboard Input Method"; }' \
+    '{ InputSourceKind = "Keyboard Layout"; "KeyboardLayout ID" = 250; "KeyboardLayout Name" = "British-PC"; }'
+defaults write com.apple.HIToolbox AppleCurrentKeyboardLayoutInputSourceID -string "com.apple.keylayout.British-PC"
+
 # Dock
 defaults write com.apple.dock autohide -bool true
 defaults write com.apple.dock tilesize -int 60
 defaults write com.apple.dock wvous-bl-corner -int 4
 defaults write com.apple.dock wvous-bl-modifier -int 0
+defaults write com.apple.dock wvous-br-corner -int 10
+defaults write com.apple.dock wvous-br-modifier -int 0
+defaults write com.apple.dock show-recents -bool false
+defaults write com.apple.dock persistent-apps -array
 
 # Desktop and Window Manager
-defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -bool false
-defaults write com.apple.WindowManager StandardHideWidgets -bool true
-defaults write com.apple.WindowManager StageManagerHideWidgets -bool true
+defaults write com.apple.WindowManager EnableStandardClickToShowDesktop -int 0
+defaults write com.apple.WindowManager StandardHideWidgets -int 1
+defaults write com.apple.WindowManager StageManagerHideWidgets -int 1
 
 # Finder layout and display
 defaults write com.apple.finder AppleShowAllFiles -bool true
@@ -295,9 +278,64 @@ defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
 defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
 defaults write -g AppleShowAllExtensions -bool true
 
-# Relaunch services
-killall Finder
-killall Dock</pre>
+# Relaunch services so most preferences take effect immediately
+/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u || true
+killall cfprefsd || true
+killall SystemUIServer || true
+killall ControlCenter || true
+killall NotificationCenter || true
+killall Finder || true
+killall Dock || true
+
+# Install Homebrew without confirmation prompts
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Configure Homebrew
+touch "$HOME/.zprofile"
+echo 'eval "$(/opt/homebrew/bin/brew shellenv zsh)"' >> "$HOME/.zprofile"
+eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+
+# Install brew formulas and casks
+brew install -y fastfetch
+brew install -y ncdu
+
+brew install -y --cask iterm2
+brew install -y --cask docker
+brew install -y --cask zed
+brew install -y --cask discord
+brew install -y --cask spotify
+
+# Install Oh My Zsh
+RUNZSH=no /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# Install Powerline Fonts
+git clone --depth=1 https://github.com/powerline/fonts.git
+cd fonts
+./install.sh
+cd ..
+rm -rf fonts
+
+# Configure iTerm2 defaults
+defaults write com.googlecode.iterm2 PromptOnQuit -bool false
+defaults write com.googlecode.iterm2 OnlyWhenMoreTabs -bool false
+defaults write com.googlecode.iterm2 "Prompt Before Closing 2" -bool false
+defaults write com.googlecode.iterm2 "Unlimited Scrollback" -bool true
+defaults write com.googlecode.iterm2 "Normal Font" -string "MesloLGMDZForPowerline-Regular 12"
+
+# Install Zsh Plugins
+git clone --depth=1 https://github.com/marlonrichert/zsh-autocomplete.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autocomplete"
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${HOME}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+
+# Update .zshrc configuration
+ZSHRC_FILE="$HOME/.zshrc"
+OLD_PLUGINS="plugins=(git)"
+NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)"
+
+sed -i '' "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
+sed -i '' 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
+sed -i '' "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
+echo 'setopt interactivecomments' >> "$ZSHRC_FILE"</pre>
             </div>
         </div>
     </body>
