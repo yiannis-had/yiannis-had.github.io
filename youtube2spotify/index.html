@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Transfer songs from a public YouTube playlist to a private Spotify playlist.">
+  <title>YouTube2Spotify</title>
+  <link rel="icon" href="./favicon.ico" sizes="any">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="masthead">
+      <h1><em>youtube</em> → <strong>spotify</strong></h1>
+      <p class="tagline">transfer songs from a youtube playlist to a new spotify playlist.</p>
+    </header>
+
+    <main>
+      <section class="panel view" id="home-view" aria-labelledby="home-heading">
+        <h2 class="sr-only" id="home-heading" data-view-heading tabindex="-1">Transfer a playlist</h2>
+        <div class="flow" aria-hidden="true">
+          <span class="from">youtube</span>
+          <span class="arrow"></span>
+          <span class="to">spotify</span>
+        </div>
+
+        <div class="error-banner" id="home-error" role="alert" hidden></div>
+
+        <form id="transfer-form" novalidate>
+          <div class="form-group">
+            <label for="youtube-playlist">playlist url or id</label>
+            <input type="text" id="youtube-playlist" name="youtubePlaylist"
+              placeholder="https://www.youtube.com/playlist?list=..." required
+              aria-describedby="youtube-playlist-error playlist-help" autocomplete="url">
+            <p class="error-msg" id="youtube-playlist-error" hidden></p>
+          </div>
+
+          <div class="form-group">
+            <label for="spotify-playlist-name">new playlist name</label>
+            <input type="text" id="spotify-playlist-name" name="spotifyPlaylistName"
+              placeholder="late night chill" maxlength="100" required
+              aria-describedby="spotify-playlist-name-error" autocomplete="off">
+            <p class="error-msg" id="spotify-playlist-name-error" hidden></p>
+          </div>
+
+          <button type="submit" class="btn btn-full" id="submit-button">connect spotify and transfer →</button>
+        </form>
+        <p class="aside" id="playlist-help">The YouTube playlist must be public or unlisted. The new Spotify playlist will be private.</p>
+      </section>
+
+      <section class="panel view" id="processing-view" aria-labelledby="processing-heading" aria-live="polite" hidden>
+        <div class="flow" aria-hidden="true">
+          <span class="from">youtube</span>
+          <span class="arrow"></span>
+          <span class="to">spotify</span>
+        </div>
+        <p class="done-badge working-badge">working…</p>
+        <h2 class="status-heading" id="processing-heading" data-view-heading tabindex="-1">Transferring your playlist</h2>
+        <p id="progress-message">Preparing…</p>
+        <progress id="migration-progress" max="1" value="0" hidden></progress>
+        <div class="loader-bar" id="indeterminate-loader" aria-hidden="true"></div>
+        <p class="aside">Keep this tab open. Large playlists can take a few minutes because every title is checked against Spotify.</p>
+      </section>
+
+      <section class="panel view error-panel" id="error-view" aria-labelledby="error-heading" hidden>
+        <p class="done-badge error-badge">error</p>
+        <h2 class="status-heading" id="error-heading" data-view-heading tabindex="-1">transfer failed</h2>
+        <p id="error-message" role="alert"></p>
+        <div class="actions">
+          <button type="button" class="btn error-button" id="error-home-button">go back home</button>
+        </div>
+      </section>
+
+      <section class="panel view" id="done-view" aria-labelledby="done-heading" hidden>
+        <p class="done-badge">finished</p>
+        <div class="profile">
+          <div id="profile-image-container" class="avatar-fallback" aria-hidden="true">?</div>
+          <h2 id="done-heading" data-view-heading tabindex="-1">Your playlist is ready.</h2>
+        </div>
+
+        <ul class="result-list">
+          <li>
+            <span class="k">match summary</span>
+            <p id="match-summary"></p>
+            <details id="unmatched-details" hidden>
+              <summary id="unmatched-summary"></summary>
+              <ul id="unmatched-list" class="unmatched-list"></ul>
+            </details>
+          </li>
+          <li>
+            <span class="k">new playlist</span>
+            <a id="playlist-link" target="_blank" rel="noopener noreferrer">open in spotify</a>
+          </li>
+        </ul>
+
+        <div class="actions">
+          <button type="button" class="btn" id="another-transfer-button">transfer another</button>
+          <button type="button" class="btn btn-ghost" id="logout-button">log out</button>
+        </div>
+      </section>
+    </main>
+
+    <noscript>
+      <div class="panel noscript">JavaScript is required because this app runs entirely in your browser.</div>
+    </noscript>
+
+    <footer class="site-footer">
+      <a href="https://github.com/yiannis-had/youtube2spotify" target="_blank" rel="noopener noreferrer">source on github</a>
+      · by <a href="https://github.com/yiannis-had" target="_blank" rel="noopener noreferrer">yiannis-had</a>
+    </footer>
+  </div>
+</body>
+</html>

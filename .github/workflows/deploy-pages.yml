@@ -1,0 +1,78 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: js
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      VITE_SPOTIFY_CLIENT_ID: ${{ vars.SPOTIFY_CLIENT_ID }}
+      VITE_YOUTUBE_DEVELOPER_KEY: ${{ vars.YOUTUBE_DEVELOPER_KEY }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: youtube2spotify/package-lock.json
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Verify public configuration
+        run: |
+          if [ -z "$VITE_SPOTIFY_CLIENT_ID" ] || [ -z "$VITE_YOUTUBE_DEVELOPER_KEY" ]; then
+            echo "::error::Add SPOTIFY_CLIENT_ID and YOUTUBE_DEVELOPER_KEY as repository variables."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: youtube2spotify
+
+      - name: Test
+        run: npm test
+        working-directory: youtube2spotify
+
+      - name: Build
+        run: npm run build
+        working-directory: youtube2spotify
+
+      - name: Assemble site
+        run: |
+          # Root static files
+          cp -r CNAME favicon.svg styles.css index.html config/ _site/
+          # YouTube2Spotify app
+          mkdir -p _site/youtube2spotify
+          cp -r youtube2spotify/dist/* _site/youtube2spotify/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
