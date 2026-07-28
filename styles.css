@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=block");
 
 :root {
     --bg: #08090c;
@@ -58,6 +58,10 @@ body {
     align-items: center;
     text-align: center;
     gap: 1.5rem;
+    opacity: 0;
+}
+
+.fonts-ready .page-home .container {
     animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -78,10 +82,10 @@ body {
     font-weight: 400;
     letter-spacing: -0.01em;
     margin-bottom: 0.25rem;
+    color: transparent;
     background: linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%);
     -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
 }
 
 .subtitle {

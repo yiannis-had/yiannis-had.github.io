@@ -61,5 +61,33 @@
         <footer class="subtle-footer">
             <a href="config/">config</a>
         </footer>
+        <script>
+            (function () {
+                var html = document.documentElement;
+                var done = false;
+                function reveal() {
+                    if (done) return;
+                    done = true;
+                    html.classList.add("fonts-ready");
+                }
+
+                var fallback = setTimeout(reveal, 3000);
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(function () {
+                        clearTimeout(fallback);
+                        reveal();
+                    });
+                } else {
+                    reveal();
+                }
+            })();
+        </script>
+        <noscript>
+            <style>
+                .page-home .container {
+                    opacity: 1;
+                }
+            </style>
+        </noscript>
     </body>
 </html>
