@@ -3,11 +3,13 @@
 <head>
   {{ partial "head.html" . }}
 </head>
-<body class="page-blog">
-  {{ partial "header.html" . }}
-  <main>
-    {{ block "main" . }}{{ end }}
-  </main>
+<body class="page-config">
+  <div class="container container-wide">
+    {{ partial "header.html" . }}
+    <main>
+      {{ block "main" . }}{{ end }}
+    </main>
+  </div>
   {{ partial "footer.html" . }}
 </body>
 </html>

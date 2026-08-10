@@ -30,6 +30,8 @@ body {
     line-height: 1.5;
 }
 
+/* ── Home page ────────────────────────────────── */
+
 .page-home {
     display: flex;
     flex-direction: column;
@@ -157,40 +159,43 @@ body {
     color: var(--accent);
 }
 
-/* ── Blog pages ─────────────────────────────── */
+/* ── Shared content pages (blog + config) ────── */
 
-.page-blog {
-    background-color: var(--bg);
-    color: var(--fg);
-    font-family: "Plus Jakarta Sans", sans-serif;
-    min-height: 100vh;
-    line-height: 1.6;
-    padding: 2rem 1rem 4rem;
+.page-config {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1rem;
 }
 
-.blog-header {
+.page-config .container {
+    width: 100%;
+}
+
+.container-narrow {
+    max-width: 440px;
+}
+
+.container-wide {
     max-width: 680px;
-    margin: 0 auto 3rem;
 }
 
-.blog-header__home {
+.back {
     color: var(--muted);
     text-decoration: none;
-    font-size: 0.75rem;
+    font-size: 0.65rem;
     font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.15em;
+    display: inline-block;
+    margin-bottom: 2.5rem;
     transition: color 0.2s;
 }
 
-.blog-header__home:hover {
+.back:hover {
     color: var(--accent);
 }
 
-.blog-list {
-    max-width: 680px;
-    margin: 0 auto;
-}
+/* ── Blog listing ────────────────────────────── */
 
 .blog-list__title {
     font-family: "Playfair Display", serif;
@@ -257,12 +262,7 @@ body {
     color: var(--accent);
 }
 
-/* ── Single post ────────────────────────────── */
-
-.post {
-    max-width: 680px;
-    margin: 0 auto;
-}
+/* ── Blog post ───────────────────────────────── */
 
 .post__header {
     margin-bottom: 2rem;
@@ -390,32 +390,7 @@ body {
     border-color: var(--accent);
 }
 
-.blog-footer {
-    max-width: 680px;
-    margin: 4rem auto 0;
-    text-align: center;
-    font-size: 0.7rem;
-    color: var(--muted);
-    opacity: 0.5;
-}
-
-.page-config {
-    display: flex;
-    justify-content: center;
-    padding: 3rem 1rem;
-}
-
-.page-config .container {
-    width: 100%;
-}
-
-.container-narrow {
-    max-width: 440px;
-}
-
-.container-wide {
-    max-width: 680px;
-}
+/* ── Config listing ──────────────────────────── */
 
 .page-config h1 {
     font-size: 0.75rem;
@@ -424,20 +399,6 @@ body {
     letter-spacing: 0.18em;
     color: var(--muted);
     margin-bottom: 2rem;
-}
-
-.back {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    display: inline-block;
-    margin-bottom: 2.5rem;
-}
-
-.back:hover {
-    color: var(--accent);
 }
 
 .list,
@@ -499,6 +460,8 @@ body {
 .card-link:hover {
     color: var(--accent);
 }
+
+/* ── Snippets (config sub-pages) ─────────────── */
 
 .snippet-section {
     margin-bottom: 2rem;

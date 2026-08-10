@@ -1,7 +1,5 @@
-<header class="blog-header">
-  {{ if .IsPage }}
-  <a href="/blog/" class="blog-header__home">&larr; back</a>
-  {{ else }}
-  <a href="/" class="blog-header__home">&larr; home</a>
-  {{ end }}
-</header>
+{{ if .IsPage }}
+<a href="/blog/" class="back">&larr; back</a>
+{{ else }}
+<a href="/" class="back">&larr; home</a>
+{{ end }}
