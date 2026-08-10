@@ -1,5 +1,4 @@
 baseURL = "https://www.yiannis.cy/"
 title = "Yiannis Hadjicharalambous"
 archetypeDir = "layouts/_archetypes"
-pluralizeListTitles = false
 disableKinds = ["taxonomy", "term"]
