@@ -1,6 +1,6 @@
 {{ define "main" }}
 
-<h1>blog</h1>
+<h1>{{ .Title | lower }}</h1>
 
 {{ $paginator := .Paginate .Pages 20 }}
 <ul class="list">
