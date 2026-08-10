@@ -253,7 +253,13 @@ body {
     font-size: 0.85rem;
 }
 
-/* ── Blog post body ──────────────────────────── */
+/* ── Blog post ───────────────────────────────── */
+
+.post-date {
+    font-size: 0.65rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+}
 
 .post h1 {
     font-family: "Playfair Display", serif;
