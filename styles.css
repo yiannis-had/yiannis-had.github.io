@@ -258,7 +258,8 @@ body {
 .post-date {
     font-size: 0.65rem;
     color: var(--dim);
-    margin-bottom: 0.5rem;
+    margin-top: 0.4rem;
+    margin-bottom: 2rem;
 }
 
 .post h1 {
