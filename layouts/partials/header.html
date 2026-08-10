@@ -1,3 +1,7 @@
 <header class="blog-header">
-  <a href="/" class="blog-header__home">← home</a>
+  {{ if .IsPage }}
+  <a href="/blog/" class="blog-header__home">&larr; back</a>
+  {{ else }}
+  <a href="/" class="blog-header__home">&larr; home</a>
+  {{ end }}
 </header>
