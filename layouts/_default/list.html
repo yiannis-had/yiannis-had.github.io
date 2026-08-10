@@ -1,0 +1,24 @@
+{{ define "main" }}
+
+<div class="blog-list">
+  <h1 class="blog-list__title">Blog</h1>
+  {{ $paginator := .Paginate .Pages 20 }}
+  {{ range $paginator.Pages }}
+  <article class="blog-item">
+    <time class="blog-item__date" datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "Jan 2, 2006" }}</time>
+    <h2 class="blog-item__title"><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+  </article>
+  {{ else }}
+  <p class="blog-empty">No posts yet.</p>
+  {{ end }}
+
+  {{ if gt $paginator.TotalPages 1 }}
+  <nav class="pagination">
+    {{ if $paginator.HasPrev }}<a href="{{ $paginator.Prev.URL }}">← Newer</a>{{ end }}
+    <span>{{ $paginator.PageNumber }} / {{ $paginator.TotalPages }}</span>
+    {{ if $paginator.HasNext }}<a href="{{ $paginator.Next.URL }}">Older →</a>{{ end }}
+  </nav>
+  {{ end }}
+</div>
+
+{{ end }}
