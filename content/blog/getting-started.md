@@ -2,7 +2,6 @@
 title: "Getting Started"
 date: "2026-08-10T19:00:00+03:00"
 draft: false
-tags: ["meta"]
 ---
 
 This is the first post on the blog. Posts are written in Markdown and built

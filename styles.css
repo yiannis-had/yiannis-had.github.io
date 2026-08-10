@@ -348,32 +348,6 @@ body {
     font-style: italic;
 }
 
-/* ── Tags ────────────────────────────────────── */
-
-.tags {
-    margin-top: 3rem;
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-.tag {
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 0.2em 0.6em;
-    transition: color 0.2s, border-color 0.2s;
-}
-
-.tag:hover {
-    color: var(--accent);
-    border-color: var(--accent);
-}
-
 /* ── Pagination ──────────────────────────────── */
 
 .pagination {

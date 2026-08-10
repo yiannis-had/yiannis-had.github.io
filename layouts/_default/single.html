@@ -6,12 +6,6 @@
   <div class="post-body">
     {{ .Content }}
   </div>
-
-  {{ with .Params.tags }}
-  <div class="tags">
-    {{ range . }}<a class="tag" href="{{ "/tags/" | relURL }}{{ . | urlize }}">{{ . }}</a>{{ end }}
-  </div>
-  {{ end }}
 </article>
 
 {{ end }}
