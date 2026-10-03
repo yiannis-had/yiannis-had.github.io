@@ -38,13 +38,61 @@ set -eo pipefail
 # Update system and install base packages
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y make build-essential git htop tmux jq ncdu pigz pv zip unzip curl wget gpg llvm
-sudo apt-get install -y vim tree gufw shellcheck tldr copyq bleachbit aptitude synaptic fastfetch gnome-tweaks gnome-shell-extensions dconf-editor
+sudo apt-get install -y vim tree gufw shellcheck copyq bleachbit aptitude synaptic fastfetch gnome-tweaks gnome-shell-extensions dconf-editor dconf-cli
 
-# GNOME extensions
-gnome-extensions enable dash-to-dock@micxgx.gmail.com                   # https://extensions.gnome.org/extension/307/
-gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com          # https://extensions.gnome.org/extension/615/
-gnome-extensions enable ding@rastersoft.com                             # https://extensions.gnome.org/extension/2087/
-gnome-extensions enable another-window-session-manager@gmail.com        # https://extensions.gnome.org/extension/4709/
+# Install GNOME extensions
+SHELL_VERSION="$(gnome-shell --version | awk '{print $3}')"
+declare -A GNOME_EXTENSIONS=(
+    [dash-to-dock@micxgx.gmail.com]=307
+    [appindicatorsupport@rgcjonas.gmail.com]=615
+    [ding@rastersoft.com]=2087
+    [another-window-session-manager@gmail.com]=4709
+)
+
+install_gnome_extension() {
+    local extension_id="$1"
+    local download_url
+    local extension_zip
+
+    download_url="$(curl -fsSL "https://extensions.gnome.org/extension-info/?pk=${extension_id}&shell_version=${SHELL_VERSION}" | jq -er '.download_url')"
+    extension_zip="$(mktemp)"
+    curl -fsSL "https://extensions.gnome.org${download_url}" -o "$extension_zip"
+    gnome-extensions install --force "$extension_zip"
+    rm -f "$extension_zip"
+}
+
+for extension_id in "${GNOME_EXTENSIONS[@]}"; do
+    install_gnome_extension "$extension_id"
+done
+
+# Enable these extensions on the next GNOME Shell login
+printf -v ENABLED_EXTENSIONS "'%s', " "${!GNOME_EXTENSIONS[@]}"
+gsettings set org.gnome.shell enabled-extensions "[${ENABLED_EXTENSIONS%, }]"
+
+# Dock and windows
+gsettings set org.gnome.shell favorite-apps "['firefox-esr.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Settings.desktop', 'org.gnome.Extensions.desktop']"
+dconf write /org/gnome/shell/extensions/dash-to-dock/click-action "'focus-minimize-or-previews'"
+gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
+
+# Power and appearance
+powerprofilesctl set performance
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing'
+gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing'
+gsettings set org.gnome.desktop.screensaver lock-enabled false
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
+gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-automatic true
+gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 2450
+
+# Nautilus
+gsettings set org.gnome.nautilus.preferences show-hidden-files true
+
+mkdir -p "$HOME/.config/gtk-3.0"
+cat > "$HOME/.config/gtk-3.0/bookmarks" <<EOF
+file://${HOME}/Downloads
+file://${HOME}
+file:///
+EOF
 
 # Add user to sudoers with NOPASSWD
 echo "$USER ALL=(ALL:ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/$USER
@@ -92,22 +140,8 @@ sudo apt-get update && sudo apt-get install -y librewolf
 # Prepare secure keyrings directory
 sudo install -m 0755 -d /etc/apt/keyrings
 
-# Spotify https://www.spotify.com/us/download/linux/
-curl -fsSL https://download.spotify.com/debian/pubkey_C85668DF69375001.gpg | sudo gpg --dearmor --yes -o /etc/apt/keyrings/spotify.gpg
-sudo chmod a+r /etc/apt/keyrings/spotify.gpg
-echo "deb [signed-by=/etc/apt/keyrings/spotify.gpg] https://repository.spotify.com stable non-free" | sudo tee /etc/apt/sources.list.d/spotify.list
-sudo apt-get update && sudo apt-get install -y spotify-client
-
-# Docker https://docs.docker.com/engine/install/debian/
-curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-sudo chmod a+r /etc/apt/keyrings/docker.gpg
-echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-sudo groupadd -f docker
-sudo usermod -aG docker "$USER"</pre>
+# Spotify https://flathub.org/en/apps/com.spotify.Client
+flatpak install -y flathub com.spotify.Client</pre>
             </div>
 
             <div class="snippet-section">
