@@ -38,7 +38,7 @@ set -eo pipefail
 # Update system and install base packages
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install -y make build-essential git htop tmux jq ncdu pigz pv zip unzip curl wget gpg llvm
-sudo apt-get install -y vim tree gufw shellcheck copyq bleachbit aptitude synaptic fastfetch gnome-tweaks gnome-shell-extensions dconf-editor dconf-cli
+sudo apt-get install -y vim tree gufw shellcheck copyq bleachbit aptitude synaptic fastfetch gnome-tweaks gnome-shell-extensions dconf-editor dconf-cli gir1.2-gnomedesktop-3.0
 
 # Install GNOME extensions
 SHELL_VERSION="$(gnome-shell --version | awk '{print $3}')"
@@ -46,7 +46,6 @@ declare -A GNOME_EXTENSIONS=(
     [dash-to-dock@micxgx.gmail.com]=307
     [appindicatorsupport@rgcjonas.gmail.com]=615
     [ding@rastersoft.com]=2087
-    [another-window-session-manager@gmail.com]=4709
 )
 
 install_gnome_extension() {
@@ -82,13 +81,13 @@ gsettings set org.gnome.desktop.screensaver lock-enabled false
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
 gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true
 gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-automatic true
-gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 2450
+gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 4000
 
 # Nautilus
 gsettings set org.gnome.nautilus.preferences show-hidden-files true
 
 mkdir -p "$HOME/.config/gtk-3.0"
-cat > "$HOME/.config/gtk-3.0/bookmarks" <<EOF
+cat > "$HOME/.config/gtk-3.0/bookmarks" &lt;&lt;EOF
 file://${HOME}/Downloads
 file://${HOME}
 file:///
@@ -132,16 +131,13 @@ sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flat
 # Discord https://flathub.org/apps/com.discordapp.Discord
 flatpak install -y flathub com.discordapp.Discord
 
+# Spotify https://flathub.org/en/apps/com.spotify.Client
+flatpak install -y flathub com.spotify.Client
+
 # Librewolf https://librewolf.net/installation/debian/
 sudo apt-get update && sudo apt-get install -y extrepo
 sudo extrepo enable librewolf
-sudo apt-get update && sudo apt-get install -y librewolf
-
-# Prepare secure keyrings directory
-sudo install -m 0755 -d /etc/apt/keyrings
-
-# Spotify https://flathub.org/en/apps/com.spotify.Client
-flatpak install -y flathub com.spotify.Client</pre>
+sudo apt-get update && sudo apt-get install -y librewolf</pre>
             </div>
 
             <div class="snippet-section">
