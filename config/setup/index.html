@@ -33,6 +33,7 @@
                 <pre class="snippet-body">
 #!/usr/bin/env bash
 
+setopt interactivecomments
 set -eo pipefail
 
 # Update system and install base packages
@@ -84,8 +85,6 @@ gsettings set org.gnome.settings-daemon.plugins.color night-light-schedule-autom
 gsettings set org.gnome.settings-daemon.plugins.color night-light-temperature 4000
 
 # Nautilus
-gsettings set org.gnome.nautilus.preferences show-hidden-files true
-
 mkdir -p "$HOME/.config/gtk-3.0"
 cat > "$HOME/.config/gtk-3.0/bookmarks" &lt;&lt;EOF
 file://${HOME}/Downloads
@@ -120,9 +119,11 @@ git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting.git "${
 ZSHRC_FILE="$HOME/.zshrc"
 OLD_PLUGINS="plugins=(git)"
 NEW_PLUGINS="plugins=(git sudo copyfile command-not-found docker python zsh-autocomplete zsh-autosuggestions zsh-syntax-highlighting)"
+
 sed -i "s/${OLD_PLUGINS}/${NEW_PLUGINS}/" "$ZSHRC_FILE"
 sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' "$ZSHRC_FILE"
 sed -i "s/^# zstyle ':omz:update' mode auto/zstyle ':omz:update' mode auto/" "$ZSHRC_FILE"
+echo 'setopt interactivecomments' >> "$ZSHRC_FILE"
 
 # Flatpak
 sudo apt-get install -y flatpak gnome-software-plugin-flatpak
@@ -331,7 +332,7 @@ brew install -y --cask zed
 brew install -y --cask discord
 brew install -y --cask spotify
 
-# Install Oh My Zsh
+# Install Ohmyzsh https://ohmyz.sh/
 RUNZSH=no /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 # Install Powerline Fonts
