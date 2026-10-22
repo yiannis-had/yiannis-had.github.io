@@ -1,19 +1,13 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=block");
-
 :root {
     --bg: #08090c;
-    --fg: #f3f4f6;
-    --muted: #6b7280;
-    --dim: #4b5563;
-    --text: #9ca3af;
-    --highlight: #d1d5db;
+    --fg: #d1d5db;
+    --muted: #94a3b8;
+    --dim: #8995a7;
+    --highlight: #cbd5e1;
     --accent: #d4af37;
-    --accent-glow: rgba(212, 175, 55, 0.15);
     --success: #4caf50;
     --border: rgba(255, 255, 255, 0.06);
     --border-light: rgba(255, 255, 255, 0.12);
-    --surface: rgba(255, 255, 255, 0.02);
-    --pre-bg: rgba(255, 255, 255, 0.03);
 }
 
 * {
@@ -23,46 +17,32 @@
 }
 
 body {
+    display: flex;
+    justify-content: center;
     background-color: var(--bg);
     color: var(--fg);
-    font-family: "Plus Jakarta Sans", sans-serif;
+    font-family: "Avenir Next", Avenir, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     line-height: 1.5;
 }
 
-.page-home {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    padding: 2rem 1rem;
-    background-image:
-        radial-gradient(
-            circle at 50% 45%,
-            rgba(212, 175, 55, 0.05) 0%,
-            transparent 60%
-        ),
-        radial-gradient(
-            circle at 10% 85%,
-            rgba(100, 116, 139, 0.01) 0%,
-            transparent 40%
-        );
+a {
+    color: var(--muted);
+    text-decoration: none;
 }
 
-.page-home .container {
-    max-width: 440px;
+.container {
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 1.5rem;
-    opacity: 0;
+    max-width: 440px;
+    min-width: 0;
+    animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.fonts-ready .page-home .container {
-    animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.container-wide {
+    max-width: 680px;
 }
 
 @keyframes fadeIn {
@@ -76,29 +56,42 @@ body {
     }
 }
 
+.page-home {
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    padding: 2rem 1rem;
+    background-image:
+        radial-gradient(circle at 50% 45%, rgba(212, 175, 55, 0.05), transparent 60%),
+        radial-gradient(circle at 10% 85%, rgba(100, 116, 139, 0.01), transparent 40%);
+}
+
+.page-home .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+    animation-duration: 0.6s;
+}
+
 .page-home h1 {
-    font-family: "Playfair Display", serif;
-    font-size: clamp(2rem, 7vw, 2.75rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    margin-bottom: 0.25rem;
+    font-family: "Avenir Next", Avenir, Optima, "Helvetica Neue", "Segoe UI", sans-serif;
+    font-size: clamp(1.85rem, 6.5vw, 2.5rem);
+    font-weight: 300;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.35rem;
     color: transparent;
-    background: linear-gradient(180deg, #ffffff 0%, #e5e7eb 100%);
+    background: linear-gradient(180deg, #d8dce3, var(--muted));
     -webkit-background-clip: text;
     background-clip: text;
 }
 
-.subtitle {
-    font-size: 0.8125rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    color: var(--text);
-    margin-bottom: 0.5rem;
+ul {
+    list-style: none;
 }
 
 .social-links {
-    list-style: none;
     display: flex;
     gap: 1.25rem;
     justify-content: center;
@@ -113,14 +106,13 @@ body {
     border-radius: 50%;
     border: 1px solid var(--border);
     background: rgba(255, 255, 255, 0.01);
-    color: var(--text);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition-property: color, border-color, background-color, transform, box-shadow;
 }
 
 .social-links a:hover {
-    color: var(--accent);
     border-color: var(--accent);
-    background: var(--accent-glow);
+    background: rgba(212, 175, 55, 0.15);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(212, 175, 55, 0.1);
 }
@@ -143,61 +135,39 @@ body {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: var(--muted);
-    text-decoration: none;
     opacity: 0.35;
     transition: opacity 0.3s ease;
 }
 
 .subtle-footer a:hover {
     opacity: 0.8;
-    color: var(--accent);
 }
 
 .page-config {
-    display: flex;
-    justify-content: center;
     padding: 3rem 1rem;
-}
-
-.page-config .container {
-    width: 100%;
-}
-
-.container-narrow {
-    max-width: 440px;
-}
-
-.container-wide {
-    max-width: 680px;
 }
 
 .page-config h1 {
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     color: var(--muted);
     margin-bottom: 2rem;
 }
 
 .back {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.65rem;
+    color: var(--highlight);
+    font-size: 0.75rem;
+    font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     display: inline-block;
     margin-bottom: 2.5rem;
 }
 
-.back:hover {
-    color: var(--accent);
-}
-
 .list,
 .card-list {
-    list-style: none;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
@@ -208,51 +178,49 @@ body {
 }
 
 .list a {
-    color: var(--text);
-    text-decoration: none;
-    font-size: 1.1rem;
-    font-weight: 500;
+    font-size: 1.05rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
     display: flex;
     align-items: center;
     gap: 0.4rem;
     transition: color 0.2s;
 }
 
-.list a:hover {
-    color: var(--accent);
-}
-
 .list-prefix a::before {
     content: "/";
     color: var(--muted);
-    font-weight: 400;
 }
 
-.card-list li {
+.card-list a {
+    display: block;
     padding: 0.85rem 1rem;
-    background: var(--surface);
+    background: rgba(12, 13, 18, 0.72);
     border: 1px solid var(--border);
     border-radius: 6px;
+    transition: border-color 0.2s, background-color 0.2s, transform 0.2s;
+}
+
+.card-list a:hover,
+.card-list a:focus-visible {
+    background: rgba(18, 20, 28, 0.84);
+    border-color: var(--border-light);
+    transform: translateY(-1px);
 }
 
 .card-name {
     font-weight: 500;
-    font-size: 0.85rem;
-    color: var(--highlight);
+    font-size: 0.9rem;
+    color: var(--fg);
     display: block;
     margin-bottom: 0.2rem;
 }
 
 .card-link {
-    color: var(--muted);
-    text-decoration: none;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 400;
     word-break: break-all;
     transition: color 0.2s;
-}
-
-.card-link:hover {
-    color: var(--accent);
 }
 
 .snippet-section {
@@ -274,19 +242,10 @@ body {
     color: var(--dim);
 }
 
-.snippet-label a {
-    color: var(--text);
-    text-decoration: none;
-}
-
-.snippet-label a:hover {
-    color: var(--accent);
-}
-
 .snippet-btn {
     background: none;
     border: 1px solid var(--border-light);
-    color: var(--text);
+    color: var(--muted);
     cursor: pointer;
     font-size: 0.75rem;
     border-radius: 4px;
@@ -314,7 +273,6 @@ body {
 
 .snippet-body {
     display: none;
-    margin-top: 0.5rem;
 }
 
 .snippet-body.open {
@@ -322,14 +280,19 @@ body {
 }
 
 pre {
-    background: var(--pre-bg);
+    background: rgba(12, 13, 18, 0.78);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 1.25rem;
     overflow-x: auto;
-    font-family:
-        ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
     font-size: 0.75rem;
     line-height: 1.6;
-    color: var(--text);
+    color: var(--muted);
+}
+
+a:hover,
+.back:focus-visible,
+.card-list a:focus-visible {
+    color: var(--accent);
 }
