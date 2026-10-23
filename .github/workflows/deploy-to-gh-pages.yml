@@ -23,7 +23,7 @@ jobs:
       - run: |
           mkdir -p site
           cp CNAME favicon.svg styles.css index.html site/
-          cp -r config site/
+          cp -r config repl site/
 
       - uses: actions/upload-pages-artifact@v5
         with:

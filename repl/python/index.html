@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Python REPL</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" type="image/svg+xml" href="../../favicon.svg" />
+        <link rel="stylesheet" href="../../styles.css" />
+        <link rel="stylesheet" href="../repl.css" />
+    </head>
+    <body class="page-config page-repl">
+        <div class="container container-wide">
+            <a href=".." class="back">&larr; back</a>
+            <h1>python repl</h1>
+
+            <section
+                id="repl"
+                class="repl"
+                data-state="initialising"
+                aria-label="Python REPL"
+            >
+                <div class="repl-toolbar">
+                    <span class="repl-toolbar-label">
+                        <span class="repl-dot" aria-hidden="true"></span>
+                        python
+                    </span>
+                    <div class="repl-toolbar-actions">
+                        <button
+                            id="repl-wrap"
+                            class="repl-toolbar-btn"
+                            type="button"
+                            aria-pressed="false"
+                            aria-label="Toggle text wrapping"
+                            title="Toggle text wrapping"
+                        >
+                            toggle text wrap
+                        </button>
+                        <button
+                            id="repl-clear"
+                            class="repl-toolbar-btn"
+                            type="button"
+                            disabled
+                        >
+                            clear
+                        </button>
+                    </div>
+                </div>
+
+                <div
+                    id="repl-output"
+                    class="repl-output"
+                    role="log"
+                    aria-live="polite"
+                    aria-atomic="false"
+                ></div>
+
+                <form id="repl-form" class="repl-input-row">
+                    <span id="repl-prompt" class="repl-prompt" aria-hidden="true">&gt;&gt;&gt;</span>
+                    <textarea
+                        id="repl-input"
+                        class="repl-input"
+                        rows="1"
+                        spellcheck="false"
+                        autocapitalize="off"
+                        autocomplete="off"
+                        autocorrect="off"
+                        aria-label="Python code"
+                        placeholder="Initialising Python…"
+                        disabled
+                    ></textarea>
+                    <button id="repl-run" class="repl-run" type="submit" disabled>run</button>
+                </form>
+            </section>
+
+            <div class="repl-foot">
+                <p id="repl-meta" class="repl-meta"></p>
+                <p id="repl-hint" class="repl-hint"></p>
+            </div>
+
+            <noscript>
+                <p class="repl-subtitle">This page needs JavaScript and WebAssembly.</p>
+            </noscript>
+        </div>
+
+        <script src="../console.js"></script>
+        <script src="repl.js"></script>
+    </body>
+</html>
