@@ -1,0 +1,468 @@
+/*
+ * REPL console styles.
+ *
+ * The page frame (back link, heading, container width, page padding) comes
+ * from styles.css / .page-config. Only the console itself lives here.
+ */
+
+.page-repl {
+    --error: #e07a7a;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.repl-subtitle {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--dim);
+}
+
+.repl {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(12, 13, 18, 0.72);
+    overflow: hidden;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.repl:focus-within {
+    border-color: var(--border-light);
+    box-shadow:
+        0 0 0 1px rgba(212, 175, 55, 0.06),
+        0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.repl-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.repl-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.repl-toolbar-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+}
+
+.repl-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--dim);
+    transition:
+        background-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.repl[data-state="initialising"] .repl-dot {
+    background: var(--accent);
+    animation: repl-pulse 1.4s ease-in-out infinite;
+}
+
+.repl[data-state="ready"] .repl-dot {
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.45);
+}
+
+.repl[data-state="error"] .repl-dot {
+    background: var(--error);
+}
+
+@keyframes repl-pulse {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.repl-toolbar-btn {
+    border: 0;
+    background: none;
+    padding: 0.1rem 0;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+@media (hover: hover) {
+    .repl-toolbar-btn:hover:not(:disabled) {
+        color: var(--accent);
+    }
+}
+
+.repl-toolbar-btn[aria-pressed="true"] {
+    color: var(--accent);
+}
+
+.repl-toolbar-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.repl-output {
+    height: clamp(16rem, 50vh, 30rem);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1rem 1.1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--muted);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+}
+
+.repl-output::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+.repl-output::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid transparent;
+    border-radius: 9px;
+    background-clip: padding-box;
+}
+
+.repl-line {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.repl-output-nowrap .repl-line,
+.repl-output-nowrap .repl-init-label {
+    white-space: pre;
+    overflow-wrap: normal;
+}
+
+.repl-echo {
+    margin-top: 0.75rem;
+    color: var(--fg);
+}
+
+.repl-echo:first-child {
+    margin-top: 0;
+}
+
+.repl-echo-prompt {
+    color: var(--accent);
+    opacity: 0.85;
+    user-select: none;
+}
+
+.repl-stdout {
+    color: var(--fg);
+}
+
+.repl-stderr {
+    color: var(--error);
+}
+
+.repl-notice {
+    color: var(--dim);
+}
+
+.repl-note {
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+    color: var(--dim);
+}
+
+.repl-note:first-child {
+    margin-top: 0;
+}
+
+.repl-note code {
+    padding: 0 0.25em;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    font-family: var(--mono);
+    font-size: 0.95em;
+    color: var(--muted);
+}
+
+.repl-init {
+    margin-bottom: 0.4rem;
+    font-size: 0.72rem;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.repl-init-title {
+    margin-bottom: 0.35rem;
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dim);
+}
+
+.repl-init-step {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.repl-init-step[data-state="pending"] {
+    opacity: 0.5;
+}
+
+.repl-init-mark {
+    flex: none;
+    width: 1em;
+    text-align: center;
+    color: var(--dim);
+}
+
+.repl-init-step[data-state="active"] .repl-init-mark {
+    color: var(--accent);
+    animation: repl-pulse 1.2s ease-in-out infinite;
+}
+
+.repl-init-step[data-state="done"] .repl-init-mark {
+    color: var(--success);
+}
+
+.repl-init-step[data-state="error"] .repl-init-mark,
+.repl-init-step[data-state="error"] .repl-init-label {
+    color: var(--error);
+}
+
+.repl-init-label {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.repl-init-error {
+    margin-top: 0.55rem;
+    font-size: 0.72rem;
+    color: var(--error);
+}
+
+.repl-retry {
+    margin-left: 0.5rem;
+    padding: 0.12rem 0.4rem;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    background: none;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--error);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.repl-retry:hover:not(:disabled) {
+    background: rgba(224, 122, 122, 0.1);
+}
+
+.repl-retry:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.repl-input-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.7rem 1.1rem 0.8rem;
+    border-top: 1px solid var(--border);
+    background: rgba(8, 9, 12, 0.35);
+}
+
+.repl-prompt {
+    flex: none;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--accent);
+    user-select: none;
+}
+
+.repl-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 1.6em;
+    max-height: 14rem;
+    overflow-y: hidden;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--fg);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.6;
+    resize: none;
+    caret-color: var(--accent);
+}
+
+.repl-input::placeholder {
+    color: var(--dim);
+    opacity: 0.65;
+}
+
+.repl-input:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.repl-run {
+    flex: none;
+    margin-top: 0.05rem;
+    padding: 0.28rem 0.6rem;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    background: transparent;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition:
+        color 0.2s ease,
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.repl-run:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(212, 175, 55, 0.08);
+    color: var(--accent);
+}
+
+.repl-run:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.repl-toolbar-btn:focus-visible,
+.repl-run:focus-visible,
+.repl-retry:focus-visible {
+    outline: 1px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.repl-foot {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem 1.25rem;
+    margin-top: 0.9rem;
+}
+
+.repl-meta {
+    font-size: 0.68rem;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.repl-meta a {
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.2);
+    text-underline-offset: 2px;
+    transition: color 0.2s ease;
+}
+
+.repl-meta a:hover {
+    color: var(--accent);
+}
+
+.repl-sep {
+    margin: 0 0.35rem;
+    color: var(--dim);
+    opacity: 0.6;
+}
+
+.repl-hint {
+    font-size: 0.68rem;
+    line-height: 1.9;
+    color: var(--muted);
+    text-align: right;
+}
+
+.repl-hint kbd {
+    display: inline-block;
+    padding: 0.06rem 0.3rem;
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.03);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--muted);
+    vertical-align: 0.05em;
+}
+
+@media (max-width: 520px) {
+    .repl-output {
+        height: 48vh;
+        padding: 0.85rem;
+    }
+
+    .repl-input-row {
+        padding: 0.65rem 0.85rem 0.7rem;
+    }
+
+    .repl-toolbar-actions {
+        gap: 1.5rem;
+    }
+
+    .repl-foot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.35rem;
+    }
+
+    .repl-hint {
+        text-align: left;
+    }
+}
+
+@media (pointer: coarse) {
+    .repl-prompt,
+    .repl-input {
+        font-size: 16px;
+        line-height: 1.4;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .repl[data-state="initialising"] .repl-dot,
+    .repl-init-step[data-state="active"] .repl-init-mark {
+        animation: none;
+    }
+}
