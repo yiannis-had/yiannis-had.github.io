@@ -131,6 +131,12 @@ del _make_repl
         return {
             isatty: false,
             write(buffer) {
+                // Stop decoding once the console's output budget is exhausted.
+                if (api.remainingOutput() <= 0) {
+                    api.markTruncated();
+                    return buffer.length;
+                }
+
                 const text = decoder.decode(buffer, { stream: true });
                 if (text) {
                     api.write(text, kind);
@@ -223,7 +229,7 @@ del _make_repl
         const baseUrl = `https://cdn.jsdelivr.net/pyodide/v${version}/full/`;
         const steps = api.addSteps([
             `Download the Pyodide ${version} loader from cdn.jsdelivr.net`,
-            "Download pyodide.asm.wasm and python_stdlib.zip (~12 MB), then start CPython (WebAssembly)",
+            "Download pyodide.asm.wasm and python_stdlib.zip (~12 MB), then start CPython",
             "Install the stdin/stdout/stderr hooks and the REPL execution helper",
             "Verify the CPython interpreter",
         ]);
@@ -236,7 +242,7 @@ del _make_repl
         const runtime = await global.loadPyodide({ indexURL: baseUrl });
         api.complete(
             steps[1],
-            "Downloaded the runtime and standard library, started CPython (WebAssembly)",
+            "Downloaded the runtime and standard library, started CPython",
         );
 
         api.activate(steps[2]);

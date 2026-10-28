@@ -31,13 +31,18 @@
  *   activate(step)              mark a step as running
  *   complete(step, text)        mark a step as done, optionally relabel it
  *   resetInit()                 clear the init log and start over
+ *   remainingOutput()           characters left before the console truncates
+ *   markTruncated()             flag the run as truncated
  *   resolveLatestNpmVersion(package, label)
  *                              look up the latest jsDelivr release
+ *
+ * Engines can check remainingOutput() before doing more work and call
+ * markTruncated() if they stop early. write() also truncates as a safety net.
  */
 (function (global) {
     "use strict";
 
-    const MAX_OUTPUT_CHARS = 200_000;
+    const MAX_OUTPUT_CHARS = 500_000;
     const HISTORY_LIMIT = 100;
     const NPM_LATEST_URL = "https://data.jsdelivr.com/v1/package/resolve/npm";
     const SEMVER_RE = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
@@ -566,6 +571,18 @@
             },
             resetInit() {
                 resetInitLog();
+            },
+
+            // Lets an engine format only as much as the console will keep.
+            remainingOutput() {
+                return currentRun
+                    ? Math.max(0, MAX_OUTPUT_CHARS - currentRun.charCount)
+                    : 0;
+            },
+            markTruncated() {
+                if (currentRun) {
+                    currentRun.truncated = true;
+                }
             },
 
             // Both runtimes are loaded from jsDelivr; this lookup is shared.

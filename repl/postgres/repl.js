@@ -287,56 +287,79 @@
         return text;
     }
 
-    /** Renders a psql-style ASCII table for one result set. */
-    function formatTable(fields, rows, options = {}) {
-        const maxCellChars = options.maxCellChars ?? 500;
+    /**
+     * Renders a psql-style ASCII table for one result set, stopping once the
+     * rendered table would exceed maxChars. Returns the text and whether rows
+     * were omitted.
+     */
+    function formatTable(fields, rows, maxChars = Infinity) {
+        const maxCellChars = 500;
         const names = fields.map((field) => String(field.name ?? ""));
-        const values = rows.map((row) =>
-            names.map((name, index) =>
-                formatCell(
-                    Array.isArray(row) ? row[index] : row?.[name],
-                    maxCellChars,
-                ),
-            ),
-        );
+        const widths = names.map((name) => displayWidth(name));
+        const numeric = names.map(() => true);
+        const seen = names.map(() => false);
+        const values = [];
+        let truncated = false;
 
-        const numeric = names.map((name, column) => {
-            let seen = false;
-            for (const row of rows) {
-                const value = Array.isArray(row) ? row[column] : row?.[name];
+        const rowLabel = (count) =>
+            `(${count} ${count === 1 ? "row" : "rows"})`;
+        const lineWidth = (columnWidths) =>
+            columnWidths.reduce((total, width) => total + width, 0) +
+            columnWidths.length * 3;
+
+        for (const row of rows) {
+            const raw = names.map((name, index) =>
+                Array.isArray(row) ? row[index] : row?.[name],
+            );
+            const cells = raw.map((value) => formatCell(value, maxCellChars));
+            const nextWidths = cells.map((cell, column) =>
+                Math.max(widths[column], displayWidth(cell)),
+            );
+            const nextCount = values.length + 1;
+
+            // Header + separator + rows, plus the footer and newlines.
+            const nextTotal =
+                (2 + nextCount) * lineWidth(nextWidths) +
+                displayWidth(rowLabel(nextCount)) +
+                (nextCount + 2);
+
+            if (values.length > 0 && nextTotal > maxChars) {
+                truncated = true;
+                break;
+            }
+
+            values.push(cells);
+            nextWidths.forEach((width, column) => {
+                widths[column] = width;
+            });
+
+            raw.forEach((value, column) => {
                 if (value === null || value === undefined) {
-                    continue;
+                    return;
                 }
-                seen = true;
+                seen[column] = true;
                 if (typeof value === "number" || typeof value === "bigint") {
-                    continue;
+                    return;
                 }
                 if (typeof value === "string" && NUMERIC_RE.test(value)) {
-                    continue;
+                    return;
                 }
-                return false;
-            }
-            return seen;
-        });
+                numeric[column] = false;
+            });
+        }
 
-        const widths = names.map((name, column) => {
-            let width = displayWidth(name);
-            for (const row of values) {
-                width = Math.max(width, displayWidth(row[column]));
-            }
-            return width;
-        });
-
+        const rightAligned = numeric.map(
+            (isNumeric, column) => isNumeric && seen[column],
+        );
         const pad = (text, width, right) => {
             const fill = " ".repeat(Math.max(0, width - displayWidth(text)));
             return right ? fill + text : text + fill;
         };
-
         const line = (cells) =>
             cells
                 .map(
                     (cell, column) =>
-                        ` ${pad(cell, widths[column], numeric[column])} `,
+                        ` ${pad(cell, widths[column], rightAligned[column])} `,
                 )
                 .join("|")
                 .replace(/\s+$/, "");
@@ -346,9 +369,9 @@
         for (const row of values) {
             output.push(line(row));
         }
-        output.push(`(${rows.length} ${rows.length === 1 ? "row" : "rows"})`);
+        output.push(rowLabel(values.length));
 
-        return output.join("\n");
+        return { text: output.join("\n"), truncated };
     }
 
     /** psql-style command tag for statements that do not return rows. */
@@ -382,24 +405,15 @@
         return command;
     }
 
-    /** Formats a single PGlite result into the text shown in the console. */
-    function formatResult(result, options = {}) {
+    /** Formats a single PGlite result, staying within the console's budget. */
+    function formatResult(result, maxChars = Infinity) {
         const fields = Array.isArray(result.fields) ? result.fields : [];
         if (fields.length === 0) {
-            return formatCommandTag(result);
+            return { text: formatCommandTag(result), truncated: false };
         }
 
         const rows = Array.isArray(result.rows) ? result.rows : [];
-        const maxRows = options.maxRows ?? Infinity;
-        const shown = rows.length > maxRows ? rows.slice(0, maxRows) : rows;
-
-        let text = formatTable(fields, shown, {
-            maxCellChars: options.maxCellChars,
-        });
-        if (shown.length < rows.length) {
-            text += `\n(output truncated: showing ${shown.length} of ${rows.length} rows)`;
-        }
-        return text;
+        return formatTable(fields, rows, maxChars);
     }
 
     /* --------------------------------------------------------------------- */
@@ -409,54 +423,6 @@
     // Known-good fallback. The latest PGlite release is resolved at startup;
     // if it cannot be resolved or loaded, this version is used instead.
     const FALLBACK_PGLITE_VERSION = "0.5.11";
-    const MAX_ROWS = 1000;
-
-    const META_HELP = `
-  \\?               show this help
-  \\d [name]        list relations (tables, views, sequences), or describe one
-  \\dt [pattern]    list tables only
-  \\l               list databases
-  \\timing [on|off] toggle statement timing`;
-
-    const LIST_TABLES_SQL = `select table_schema as schema,
-       table_name as name,
-       case table_type
-         when 'LOCAL TEMPORARY' then 'temp table'
-         else 'table'
-       end as type
-  from information_schema.tables
- where table_schema not in ('pg_catalog', 'information_schema')
-   and table_type in ('BASE TABLE', 'LOCAL TEMPORARY')
-   and ($1 = '' or table_schema || '.' || table_name ilike $1 or table_name ilike $1)
- order by 1, 2`;
-
-    const LIST_RELATIONS_SQL = `select n.nspname as schema,
-       c.relname as name,
-       case c.relkind
-         when 'r' then 'table'
-         when 'p' then 'partitioned table'
-         when 'v' then 'view'
-         when 'm' then 'materialized view'
-         when 'S' then 'sequence'
-         else c.relkind::text
-       end as type
-  from pg_class c
-  join pg_namespace n on n.oid = c.relnamespace
- where n.nspname not in ('pg_catalog', 'information_schema')
-   and c.relkind in ('r', 'p', 'v', 'm', 'S')
-   and ($1 = '' or n.nspname || '.' || c.relname ilike $1 or c.relname ilike $1)
- order by 1, 2`;
-
-    const DESCRIBE_SQL = `select a.attname as column,
-       format_type(a.atttypid, a.atttypmod) as type,
-       case when a.attnotnull then 'not null' else '' end as nullable,
-       pg_get_expr(ad.adbin, ad.adrelid) as "default"
-  from pg_attribute a
-  left join pg_attrdef ad on ad.adrelid = a.attrelid and ad.adnum = a.attnum
- where a.attrelid = to_regclass($1)
-   and a.attnum > 0
-   and not a.attisdropped
- order by a.attnum`;
 
     const LIST_DATABASES_SQL = `select datname as name,
        pg_get_userbyid(datdba) as owner,
@@ -468,7 +434,6 @@
     let pgliteVersion = null;
     let serverVersion = null;
 
-    let timing = false;
     let forceFallback = false;
     let triedFallback = false;
     let attemptedVersion = null;
@@ -519,155 +484,60 @@
     /** Writes each result set as a psql-style block. */
     function writeResults(api, results) {
         for (const result of results) {
-            const text = formatResult(result, { maxRows: MAX_ROWS });
+            const budget = api.remainingOutput();
+            if (budget <= 0) {
+                api.markTruncated();
+                return;
+            }
+
+            const { text, truncated } = formatResult(result, budget);
             if (text) {
                 api.write(`${text}\n`, "stdout");
             }
-        }
-    }
-
-    /** Runs a query and, when timing is on, prints how long it took. */
-    async function timed(api, run) {
-        const started = performance.now();
-        try {
-            return await run();
-        } finally {
-            if (timing) {
-                api.note(
-                    `Time: ${(performance.now() - started).toFixed(2)} ms`,
-                );
+            if (truncated) {
+                api.markTruncated();
+                return;
             }
         }
     }
 
     async function runSQL(sql, api) {
-        await timed(api, async () => {
-            try {
-                writeResults(api, await db.exec(sql, queryOptions(api)));
-            } catch (error) {
-                api.write(formatError(error), "stderr");
-            }
-        });
-    }
-
-    async function renderQuery(sql, params, api, { emptyNote } = {}) {
-        await timed(api, async () => {
-            try {
-                const result = await db.query(
-                    sql,
-                    params,
-                    queryOptions(api),
-                );
-
-                if (
-                    emptyNote &&
-                    Array.isArray(result.rows) &&
-                    result.rows.length === 0
-                ) {
-                    api.note(emptyNote);
-                    return;
-                }
-
-                writeResults(api, [result]);
-            } catch (error) {
-                api.write(formatError(error), "stderr");
-            }
-        });
-    }
-
-    async function listTables(argument, api) {
-        const pattern = argument ? argument.replace(/\*/g, "%") : "";
-        await renderQuery(LIST_TABLES_SQL, [pattern], api, {
-            emptyNote: "Did not find any tables.",
-        });
-    }
-
-    async function listRelations(argument, api) {
-        const pattern = argument ? argument.replace(/\*/g, "%") : "";
-        await renderQuery(LIST_RELATIONS_SQL, [pattern], api, {
-            emptyNote: "Did not find any relations.",
-        });
-    }
-
-    async function describeRelation(argument, api) {
-        if (!argument) {
-            await listRelations("", api);
-            return;
+        try {
+            writeResults(api, await db.exec(sql, queryOptions(api)));
+        } catch (error) {
+            api.write(formatError(error), "stderr");
         }
+    }
 
-        await timed(api, async () => {
-            try {
-                const result = await db.query(
-                    DESCRIBE_SQL,
-                    [argument],
-                    queryOptions(api),
-                );
-
-                if (result.rows.length === 0) {
-                    api.note(
-                        `Did not find any relation named "${argument}".`,
-                    );
-                    return;
-                }
-
-                writeResults(api, [result]);
-            } catch (error) {
-                api.write(formatError(error), "stderr");
-            }
-        });
+    async function renderQuery(sql, params, api) {
+        try {
+            const result = await db.query(sql, params, queryOptions(api));
+            writeResults(api, [result]);
+        } catch (error) {
+            api.write(formatError(error), "stderr");
+        }
     }
 
     async function runMetaCommand(source, api) {
-        const match = /^\\([^\s]+)(?:\s+([\s\S]*))?$/.exec(source.trim());
+        const match = /^\\([^\s]+)/.exec(source.trim());
         if (!match) {
-            api.write("invalid command. Try \\? for help.\n", "stderr");
+            api.write(
+                "invalid command. Use \\l to list databases.\n",
+                "stderr",
+            );
             return;
         }
 
         const name = match[1].replace(/\+$/, "");
-        const argument = (match[2] || "").trim();
-
-        switch (name) {
-            case "?":
-                api.write(`${META_HELP}\n`, "stdout");
-                return;
-            case "l":
-                await renderQuery(LIST_DATABASES_SQL, [], api);
-                return;
-            case "dt":
-                await listTables(argument, api);
-                return;
-            case "d":
-                await describeRelation(argument, api);
-                return;
-            case "timing": {
-                const value = argument.toLowerCase();
-                if (value === "on" || value === "true" || value === "1") {
-                    timing = true;
-                } else if (
-                    value === "off" ||
-                    value === "false" ||
-                    value === "0"
-                ) {
-                    timing = false;
-                } else if (value) {
-                    api.write(
-                        `\\timing: unrecognized value "${argument}"\n`,
-                        "stderr",
-                    );
-                    return;
-                } else {
-                    timing = !timing;
-                }
-                api.write(`Timing is ${timing ? "on" : "off"}.\n`, "stdout");
-                return;
-            }
-            default:
-                api.write(
-                    `invalid command \\${name}. Try \\? for help.\n`,
-                    "stderr",
-                );
+        if (name === "l") {
+            await renderQuery(LIST_DATABASES_SQL, [], api);
+            return;
         }
+
+        api.write(
+            `invalid command \\${name}. Use \\l to list databases.\n`,
+            "stderr",
+        );
     }
 
     async function initRuntime(api, fallback) {
@@ -706,7 +576,7 @@
 
         const steps = api.addSteps([
             `Download the PGlite ${version} module from cdn.jsdelivr.net`,
-            "Download pglite.wasm, pglite.data and initdb.wasm (~18 MB), then start PostgreSQL (WebAssembly)",
+            "Download pglite.wasm, pglite.data, and initdb.wasm (~18 MB), then start PostgreSQL",
             "Verify the PostgreSQL server",
         ]);
 
@@ -731,7 +601,7 @@
         }
         api.complete(
             steps[1],
-            "Downloaded the runtime, started PostgreSQL (WebAssembly)",
+            "Downloaded the runtime, started PostgreSQL",
         );
 
         api.activate(steps[2]);
@@ -814,8 +684,8 @@
         welcome() {
             return [
                 `PGlite ${pgliteVersion} · PostgreSQL ${shortServerVersion()} ready. Use `,
-                { code: "\\?" },
-                " for help.",
+                { code: "\\l" },
+                " to list databases.",
             ];
         },
     };
