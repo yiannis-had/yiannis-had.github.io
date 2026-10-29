@@ -422,13 +422,41 @@
 
     // Known-good fallback. The latest PGlite release is resolved at startup;
     // if it cannot be resolved or loaded, this version is used instead.
-    const FALLBACK_PGLITE_VERSION = "0.5.11";
+    const FALLBACK_PGLITE_VERSION = "0.5.14";
+
+    const META_HELP = `
+  \\?               show this help
+  \\l               list databases
+  \\dn              list schemas
+  \\d [schema]      list relations (tables, views, sequences) in a schema`;
 
     const LIST_DATABASES_SQL = `select datname as name,
        pg_get_userbyid(datdba) as owner,
        pg_encoding_to_char(encoding) as encoding
   from pg_database
+ where datname = current_database()
  order by datname`;
+
+    const LIST_SCHEMAS_SQL = `select n.nspname as name,
+       pg_get_userbyid(n.nspowner) as owner
+  from pg_namespace n
+ order by 1`;
+
+    const LIST_RELATIONS_SQL = `select c.relname as name,
+       case c.relkind
+         when 'r' then 'table'
+         when 'p' then 'partitioned table'
+         when 'v' then 'view'
+         when 'm' then 'materialized view'
+         when 'S' then 'sequence'
+         when 'f' then 'foreign table'
+         else c.relkind::text
+       end as type
+  from pg_class c
+  join pg_namespace n on n.oid = c.relnamespace
+ where n.nspname = coalesce(nullif($1, ''), current_schema())
+   and c.relkind in ('r', 'p', 'v', 'm', 'S', 'f')
+ order by 1`;
 
     let db = null;
     let pgliteVersion = null;
@@ -509,9 +537,13 @@
         }
     }
 
-    async function renderQuery(sql, params, api) {
+    async function renderQuery(sql, params, api, emptyNote) {
         try {
             const result = await db.query(sql, params, queryOptions(api));
+            if (emptyNote && result.rows.length === 0) {
+                api.note(emptyNote);
+                return;
+            }
             writeResults(api, [result]);
         } catch (error) {
             api.write(formatError(error), "stderr");
@@ -519,25 +551,46 @@
     }
 
     async function runMetaCommand(source, api) {
-        const match = /^\\([^\s]+)/.exec(source.trim());
+        const match = /^\\([^\s]+)(?:\s+([\s\S]*))?$/.exec(source.trim());
         if (!match) {
-            api.write(
-                "invalid command. Use \\l to list databases.\n",
-                "stderr",
-            );
+            api.write("invalid command. Use \\? for help.\n", "stderr");
             return;
         }
 
         const name = match[1].replace(/\+$/, "");
-        if (name === "l") {
-            await renderQuery(LIST_DATABASES_SQL, [], api);
-            return;
-        }
+        const argument = (match[2] || "").trim();
 
-        api.write(
-            `invalid command \\${name}. Use \\l to list databases.\n`,
-            "stderr",
-        );
+        switch (name) {
+            case "?":
+                api.write(`${META_HELP}\n`, "stdout");
+                return;
+            case "l":
+                await renderQuery(LIST_DATABASES_SQL, [], api);
+                return;
+            case "dn":
+                await renderQuery(
+                    LIST_SCHEMAS_SQL,
+                    [],
+                    api,
+                    "Did not find any schemas.",
+                );
+                return;
+            case "d":
+                await renderQuery(
+                    LIST_RELATIONS_SQL,
+                    [argument],
+                    api,
+                    argument
+                        ? `Did not find any relations in schema "${argument}".`
+                        : "Did not find any relations in the current schema.",
+                );
+                return;
+            default:
+                api.write(
+                    `invalid command \\${name}. Use \\? for help.\n`,
+                    "stderr",
+                );
+        }
     }
 
     async function initRuntime(api, fallback) {
@@ -684,8 +737,8 @@
         welcome() {
             return [
                 `PGlite ${pgliteVersion} · PostgreSQL ${shortServerVersion()} ready. Use `,
-                { code: "\\l" },
-                " to list databases.",
+                { code: "\\?" },
+                " for help.",
             ];
         },
     };
