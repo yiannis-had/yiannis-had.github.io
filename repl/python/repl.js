@@ -9,7 +9,7 @@
 
     // Known-good fallback. The latest Pyodide release is resolved at startup;
     // if it cannot be resolved or loaded, this version is used instead.
-    const FALLBACK_PYODIDE_VERSION = "314.0.7";
+    const FALLBACK_RUNTIME_VERSION = "314.0.7";
 
     /*
      * The helper is deliberately small. `codeop` tells us whether the input is
@@ -108,20 +108,24 @@ __repl_run, __repl_display__ = _make_repl()
 del _make_repl
 `;
 
-    let pyodide = null;
-    let pyodideVersion = null;
-    let pythonVersion = null;
+    /* --------------------------------------------------------------------- */
+    /* Python runtime                                                        */
+    /* --------------------------------------------------------------------- */
+
+    let runtime = null;
+    let runtimeVersion = null;
+    let platformVersion = null;
 
     let forceFallback = false;
     let triedFallback = false;
     let attemptedVersion = null;
 
-    function loadScript(src) {
+    function loadScript(url) {
         return new Promise((resolve, reject) => {
             const script = document.createElement("script");
-            script.src = src;
+            script.src = url;
             script.onload = () => resolve();
-            script.onerror = () => reject(new Error(`Failed to load ${src}`));
+            script.onerror = () => reject(new Error(`Failed to load ${url}`));
             document.head.appendChild(script);
         });
     }
@@ -147,17 +151,17 @@ del _make_repl
         };
     }
 
-    function installHooks(api, runtime) {
-        runtime.setStdout(makeWriter(api, "stdout"));
-        runtime.setStderr(makeWriter(api, "stderr"));
-        runtime.setStdin({
+    function installHooks(api, instance) {
+        instance.setStdout(makeWriter(api, "stdout"));
+        instance.setStderr(makeWriter(api, "stderr"));
+        instance.setStdin({
             stdin: () => {
                 const answer = global.prompt("Python input()");
                 return answer === null ? null : `${answer}\n`;
             },
             autoEOF: false,
         });
-        runtime.runPython(HELPER_SOURCE);
+        instance.runPython(HELPER_SOURCE);
     }
 
     function parsePipInstall(source) {
@@ -174,7 +178,7 @@ del _make_repl
     }
 
     async function installPackages(packages) {
-        if (!pyodide) {
+        if (!runtime) {
             throw new Error("Python is not ready.");
         }
 
@@ -188,8 +192,8 @@ del _make_repl
         ].join("\n");
 
         // micropip ships with Pyodide but is not loaded by default.
-        await pyodide.loadPackage("micropip");
-        await pyodide.runPythonAsync(code);
+        await runtime.loadPackage("micropip");
+        await runtime.runPythonAsync(code);
     }
 
     async function initRuntime(api, fallback) {
@@ -197,7 +201,7 @@ del _make_repl
 
         const resolveStep = api.addStep("Resolve the latest Pyodide release");
         if (fallback) {
-            version = FALLBACK_PYODIDE_VERSION;
+            version = FALLBACK_RUNTIME_VERSION;
             api.complete(
                 resolveStep,
                 `Using Pyodide ${version} (latest failed)`,
@@ -212,10 +216,10 @@ del _make_repl
                 api.complete(resolveStep, `Resolved Pyodide ${version} (latest)`);
             } catch (error) {
                 console.warn(
-                    `Couldn't resolve the latest Pyodide; using ${FALLBACK_PYODIDE_VERSION}.`,
+                    `Couldn't resolve the latest Pyodide; using ${FALLBACK_RUNTIME_VERSION}.`,
                     error,
                 );
-                version = FALLBACK_PYODIDE_VERSION;
+                version = FALLBACK_RUNTIME_VERSION;
                 forceFallback = true;
                 api.complete(
                     resolveStep,
@@ -235,46 +239,51 @@ del _make_repl
         ]);
 
         api.activate(steps[0]);
-        await loadScript(`${baseUrl}pyodide.js`);
+        const loaderUrl = `${baseUrl}pyodide.js`;
+        await loadScript(loaderUrl);
         api.complete(steps[0], `Downloaded the Pyodide ${version} loader`);
 
         api.activate(steps[1]);
-        const runtime = await global.loadPyodide({ indexURL: baseUrl });
+        const instance = await global.loadPyodide({ indexURL: baseUrl });
         api.complete(
             steps[1],
             "Downloaded the runtime and standard library, started CPython",
         );
 
         api.activate(steps[2]);
-        installHooks(api, runtime);
+        installHooks(api, instance);
         api.complete(
             steps[2],
             "Installed the stdin/stdout/stderr hooks and execution helper",
         );
 
         api.activate(steps[3]);
-        const cpythonVersion = runtime.runPython(
+        const detectedVersion = instance.runPython(
             "import sys; sys.version.split()[0]",
         );
 
         // Self-test completeness detection and top-level await before
         // declaring the REPL ready.
-        await runtime.runPythonAsync('await __repl_run("None")');
-        const incomplete = await runtime.runPythonAsync(
+        await instance.runPythonAsync('await __repl_run("None")');
+        const incomplete = await instance.runPythonAsync(
             'await __repl_run("if True:")',
         );
         if (incomplete !== true) {
             throw new Error("REPL completeness self-test failed");
         }
-        await runtime.runPythonAsync(
+        await instance.runPythonAsync(
             `await __repl_run(${JSON.stringify("await __import__('asyncio').sleep(0)")})`,
         );
 
-        pyodide = runtime;
-        pyodideVersion = version;
-        pythonVersion = cpythonVersion;
-        api.complete(steps[3], `Verified CPython ${pythonVersion}`);
+        runtime = instance;
+        runtimeVersion = version;
+        platformVersion = detectedVersion;
+        api.complete(steps[3], `Verified CPython ${platformVersion}`);
     }
+
+    /* --------------------------------------------------------------------- */
+    /* Engine                                                                */
+    /* --------------------------------------------------------------------- */
 
     const engine = {
         prompt: ">>>",
@@ -298,7 +307,7 @@ del _make_repl
                 // known-good fallback release.
                 if (
                     !triedFallback &&
-                    attemptedVersion !== FALLBACK_PYODIDE_VERSION
+                    attemptedVersion !== FALLBACK_RUNTIME_VERSION
                 ) {
                     triedFallback = true;
                     forceFallback = true;
@@ -311,7 +320,7 @@ del _make_repl
         },
 
         async submit(source) {
-            if (!pyodide) {
+            if (!runtime) {
                 throw new Error("Python is not ready.");
             }
 
@@ -321,15 +330,18 @@ del _make_repl
                 return {};
             }
 
-            const incomplete = await pyodide.runPythonAsync(
+            const incomplete = await runtime.runPythonAsync(
                 `await __repl_run(${JSON.stringify(source)})`,
             );
-            return { incomplete: incomplete === true };
+            if (incomplete) {
+                return { incomplete: true };
+            }
+            return {};
         },
 
         welcome() {
             return [
-                `Pyodide ${pyodideVersion} · CPython ${pythonVersion} ready. Use `,
+                `Pyodide ${runtimeVersion} · CPython ${platformVersion} ready. Use `,
                 { code: "%pip install <package>" },
                 " for PyPI packages.",
             ];

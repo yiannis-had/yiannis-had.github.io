@@ -289,10 +289,10 @@
 
     /**
      * Renders a psql-style ASCII table for one result set, stopping once the
-     * rendered table would exceed maxChars. Returns the text and whether rows
-     * were omitted.
+     * rendered table would exceed maxOutputChars. Returns the text and whether
+     * rows were omitted.
      */
-    function formatTable(fields, rows, maxChars = Infinity) {
+    function formatTable(fields, rows, maxOutputChars) {
         const maxCellChars = 500;
         const names = fields.map((field) => String(field.name ?? ""));
         const widths = names.map((name) => displayWidth(name));
@@ -323,7 +323,7 @@
                 displayWidth(rowLabel(nextCount)) +
                 (nextCount + 2);
 
-            if (values.length > 0 && nextTotal > maxChars) {
+            if (values.length > 0 && nextTotal > maxOutputChars) {
                 truncated = true;
                 break;
             }
@@ -406,14 +406,14 @@
     }
 
     /** Formats a single PGlite result, staying within the console's budget. */
-    function formatResult(result, maxChars = Infinity) {
+    function formatResult(result, maxOutputChars) {
         const fields = Array.isArray(result.fields) ? result.fields : [];
         if (fields.length === 0) {
             return { text: formatCommandTag(result), truncated: false };
         }
 
         const rows = Array.isArray(result.rows) ? result.rows : [];
-        return formatTable(fields, rows, maxChars);
+        return formatTable(fields, rows, maxOutputChars);
     }
 
     /* --------------------------------------------------------------------- */
@@ -422,7 +422,7 @@
 
     // Known-good fallback. The latest PGlite release is resolved at startup;
     // if it cannot be resolved or loaded, this version is used instead.
-    const FALLBACK_PGLITE_VERSION = "0.5.14";
+    const FALLBACK_RUNTIME_VERSION = "0.5.14";
 
     const META_HELP = `
   \\?               show this help
@@ -458,9 +458,9 @@
    and c.relkind in ('r', 'p', 'v', 'm', 'S', 'f')
  order by 1`;
 
-    let db = null;
-    let pgliteVersion = null;
-    let serverVersion = null;
+    let runtime = null;
+    let runtimeVersion = null;
+    let platformVersion = null;
 
     let forceFallback = false;
     let triedFallback = false;
@@ -489,14 +489,6 @@
         return `${severity}:  ${notice.message || ""}\n`;
     }
 
-    function shortServerVersion() {
-        return (
-            (serverVersion || "").match(/^PostgreSQL\s+(\S+)/)?.[1] ||
-            serverVersion ||
-            "PostgreSQL"
-        );
-    }
-
     function streamNotice(api, notice) {
         api.write(formatNotice(notice), "notice");
     }
@@ -512,13 +504,15 @@
     /** Writes each result set as a psql-style block. */
     function writeResults(api, results) {
         for (const result of results) {
-            const budget = api.remainingOutput();
-            if (budget <= 0) {
+            if (api.remainingOutput() <= 0) {
                 api.markTruncated();
                 return;
             }
 
-            const { text, truncated } = formatResult(result, budget);
+            const { text, truncated } = formatResult(
+                result,
+                api.remainingOutput(),
+            );
             if (text) {
                 api.write(`${text}\n`, "stdout");
             }
@@ -531,7 +525,7 @@
 
     async function runSQL(sql, api) {
         try {
-            writeResults(api, await db.exec(sql, queryOptions(api)));
+            writeResults(api, await runtime.exec(sql, queryOptions(api)));
         } catch (error) {
             api.write(formatError(error), "stderr");
         }
@@ -539,7 +533,7 @@
 
     async function renderQuery(sql, params, api, emptyNote) {
         try {
-            const result = await db.query(sql, params, queryOptions(api));
+            const result = await runtime.query(sql, params, queryOptions(api));
             if (emptyNote && result.rows.length === 0) {
                 api.note(emptyNote);
                 return;
@@ -598,7 +592,7 @@
 
         const resolveStep = api.addStep("Resolve the latest PGlite release");
         if (fallback) {
-            version = FALLBACK_PGLITE_VERSION;
+            version = FALLBACK_RUNTIME_VERSION;
             api.complete(
                 resolveStep,
                 `Using PGlite ${version} (latest failed)`,
@@ -613,10 +607,10 @@
                 api.complete(resolveStep, `Resolved PGlite ${version} (latest)`);
             } catch (error) {
                 console.warn(
-                    `Couldn't resolve the latest PGlite; using ${FALLBACK_PGLITE_VERSION}.`,
+                    `Couldn't resolve the latest PGlite; using ${FALLBACK_RUNTIME_VERSION}.`,
                     error,
                 );
-                version = FALLBACK_PGLITE_VERSION;
+                version = FALLBACK_RUNTIME_VERSION;
                 forceFallback = true;
                 api.complete(
                     resolveStep,
@@ -627,22 +621,23 @@
 
         attemptedVersion = version;
 
+        const baseUrl = `https://cdn.jsdelivr.net/npm/@electric-sql/pglite@${version}/dist`;
         const steps = api.addSteps([
-            `Download the PGlite ${version} module from cdn.jsdelivr.net`,
+            `Download the PGlite ${version} loader from cdn.jsdelivr.net`,
             "Download pglite.wasm, pglite.data, and initdb.wasm (~18 MB), then start PostgreSQL",
             "Verify the PostgreSQL server",
         ]);
 
         api.activate(steps[0]);
-        const moduleUrl = `https://cdn.jsdelivr.net/npm/@electric-sql/pglite@${version}/dist/index.js`;
         // A failed dynamic import is cached in the module map, so retries use
         // a distinct URL. The relative wasm/data URLs still resolve normally.
-        const specifier =
-            importAttempt === 0 ? moduleUrl : `${moduleUrl}?retry=${importAttempt}`;
+        const loaderUrl = `${baseUrl}/index.js${
+            importAttempt === 0 ? "" : `?retry=${importAttempt}`
+        }`;
         importAttempt += 1;
 
-        const module = await import(specifier);
-        api.complete(steps[0], `Downloaded the PGlite ${version} module`);
+        const module = await import(loaderUrl);
+        api.complete(steps[0], `Downloaded the PGlite ${version} loader`);
 
         api.activate(steps[1]);
         let instance;
@@ -658,17 +653,19 @@
         );
 
         api.activate(steps[2]);
-        const result = await instance.query(
-            "select version() as version, current_database() as database",
-        );
+        const result = await instance.query("select version() as version");
 
         // A second, trivial round-trip before declaring the REPL ready.
         await instance.query("select 1");
 
-        db = instance;
-        pgliteVersion = version;
-        serverVersion = result.rows[0].version;
-        api.complete(steps[2], `Verified PostgreSQL ${shortServerVersion()}`);
+        const detectedVersion =
+            result.rows[0].version.match(/^PostgreSQL\s+(\S+)/)?.[1] ||
+            result.rows[0].version;
+
+        runtime = instance;
+        runtimeVersion = version;
+        platformVersion = detectedVersion;
+        api.complete(steps[2], `Verified PostgreSQL ${platformVersion}`);
     }
 
     /* --------------------------------------------------------------------- */
@@ -697,7 +694,7 @@
                 // known-good fallback release.
                 if (
                     !triedFallback &&
-                    attemptedVersion !== FALLBACK_PGLITE_VERSION
+                    attemptedVersion !== FALLBACK_RUNTIME_VERSION
                 ) {
                     triedFallback = true;
                     forceFallback = true;
@@ -710,15 +707,11 @@
         },
 
         async submit(source, api) {
-            const trimmed = source.trim();
-            if (!trimmed) {
-                return {};
-            }
-
-            if (!db) {
+            if (!runtime) {
                 throw new Error("Postgres is not ready.");
             }
 
+            const trimmed = source.trim();
             if (trimmed.startsWith("\\")) {
                 // Accept the psql habit of ending meta-commands with a
                 // semicolon, even though psql itself does not need one.
@@ -726,7 +719,8 @@
                 return {};
             }
 
-            if (needsMoreInput(source)) {
+            const incomplete = needsMoreInput(source);
+            if (incomplete) {
                 return { incomplete: true };
             }
 
@@ -736,7 +730,7 @@
 
         welcome() {
             return [
-                `PGlite ${pgliteVersion} · PostgreSQL ${shortServerVersion()} ready. Use `,
+                `PGlite ${runtimeVersion} · PostgreSQL ${platformVersion} ready. Use `,
                 { code: "\\?" },
                 " for help.",
             ];
