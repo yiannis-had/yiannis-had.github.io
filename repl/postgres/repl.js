@@ -427,8 +427,11 @@
     const META_HELP = `
   \\?               show this help
   \\l               list databases
+  \\c [name]        connect to another database
   \\dn              list schemas
-  \\d [schema]      list relations (tables, views, sequences) in a schema`;
+  \\d [schema]      list relations (tables, views, indexes) in a schema`;
+
+    const DEFAULT_DATABASE = "postgres";
 
   const LIST_DATABASES_SQL = `
     select
@@ -449,22 +452,30 @@
     select c.relname as name,
       case c.relkind
         when 'r' then 'table'
-        when 'p' then 'partitioned table'
+        when 'i' then 'index'
+        when 'S' then 'sequence'
+        when 't' then 'TOAST table'
         when 'v' then 'view'
         when 'm' then 'materialized view'
-        when 'S' then 'sequence'
+        when 'c' then 'composite type'
         when 'f' then 'foreign table'
+        when 'p' then 'partitioned table'
+        when 'I' then 'partitioned index'
         else c.relkind::text
       end as type
     from pg_class c
     join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = coalesce(nullif($1, ''), current_schema())
-      and c.relkind in ('r', 'p', 'v', 'm', 'S', 'f')
-    order by 1`;
+    where n.nspname = coalesce(nullif($1, ''), current_schema())`;
 
     let runtime = null;
     let runtimeVersion = null;
     let platformVersion = null;
+
+    // PGlite binds an instance to a single database, so switching databases
+    // means starting a new instance on the same cluster. The cluster is kept
+    // as a compressed dump in memory while the switch happens.
+    let loader = null;
+    let currentDatabase = DEFAULT_DATABASE;
 
     let forceFallback = false;
     let triedFallback = false;
@@ -548,6 +559,132 @@
         }
     }
 
+    function setPrompt(database) {
+        engine.prompt = `${database}=#`;
+        engine.continuationPrompt = `${database}-#`;
+    }
+
+    /** psql folds unquoted identifiers to lower case; quoted ones are kept. */
+    function databaseName(argument) {
+        const quoted = /^"([\s\S]*)"$/.exec(argument);
+        if (quoted) {
+            return quoted[1];
+        }
+        if (/\s/.test(argument)) {
+            return null;
+        }
+        return argument.toLowerCase();
+    }
+
+    async function createPGliteInstance(options) {
+        if (typeof loader.PGlite.create === "function") {
+            return await loader.PGlite.create(options ?? {});
+        }
+        const instance = new loader.PGlite(options ?? {});
+        await instance.waitReady;
+        return instance;
+    }
+
+    /** Refuses databases that are missing or not accepting connections. */
+    async function databaseInfo(name) {
+        const result = await runtime.query(
+            "select datallowconn from pg_database where datname = $1",
+            [name],
+        );
+        return result.rows[0] ?? null;
+    }
+
+    /** Reopens the cluster on another database, carrying the data across. */
+    async function connectDatabase(argument, api) {
+        const name = databaseName(argument);
+        if (!name) {
+            api.write("\\c: expected a single database name.\n", "stderr");
+            return;
+        }
+
+        if (name === currentDatabase) {
+            api.note(`You are already connected to database "${name}".`);
+            return;
+        }
+
+        try {
+            const info = await databaseInfo(name);
+            if (!info) {
+                api.write(
+                    `ERROR:  database "${name}" does not exist\n`,
+                    "stderr",
+                );
+                return;
+            }
+            if (!info.datallowconn) {
+                api.write(
+                    `ERROR:  database "${name}" is not currently accepting connections\n`,
+                    "stderr",
+                );
+                return;
+            }
+        } catch (error) {
+            api.write(formatError(error), "stderr");
+            return;
+        }
+
+        api.note(`Connecting to database "${name}"…`);
+
+        let dump;
+        try {
+            dump = await runtime.dumpDataDir("auto");
+        } catch (error) {
+            api.write(formatError(error), "stderr");
+            return;
+        }
+
+        const previous = currentDatabase;
+        try {
+            await runtime.close();
+        } catch (error) {
+            console.warn("Couldn't close the previous PGlite instance.", error);
+        }
+
+        try {
+            runtime = await createPGliteInstance({
+                loadDataDir: dump,
+                database: name,
+            });
+        } catch (error) {
+            api.write(formatError(error), "stderr");
+            // Reopen the previous database so the console stays usable.
+            try {
+                runtime = await createPGliteInstance({
+                    loadDataDir: dump,
+                    database: previous,
+                });
+                api.note(`Stayed connected to database "${previous}".`);
+            } catch (restoreError) {
+                runtime = null;
+                api.write(formatError(restoreError), "stderr");
+            }
+            return;
+        }
+
+        currentDatabase = name;
+        setPrompt(name);
+        api.note(`You are now connected to database "${name}".`);
+    }
+
+    async function showConninfo(api) {
+        try {
+            const result = await runtime.query(
+                "select current_database() as database, current_user as username",
+            );
+            const { database, username } = result.rows[0];
+            api.note(
+                `You are connected to database "${database}" as user "${username}".`,
+            );
+        } catch (error) {
+            api.write(formatError(error), "stderr");
+        }
+    }
+
     async function runMetaCommand(source, api) {
         const match = /^\\([^\s]+)(?:\s+([\s\S]*))?$/.exec(source.trim());
         if (!match) {
@@ -564,6 +701,14 @@
                 return;
             case "l":
                 await renderQuery(LIST_DATABASES_SQL, [], api);
+                return;
+            case "c":
+            case "connect":
+                if (argument) {
+                    await connectDatabase(argument, api);
+                } else {
+                    await showConninfo(api);
+                }
                 return;
             case "dn":
                 await renderQuery(
@@ -640,17 +785,11 @@
         }`;
         importAttempt += 1;
 
-        const module = await import(loaderUrl);
+        loader = await import(loaderUrl);
         api.complete(steps[0], `Downloaded the PGlite ${version} loader`);
 
         api.activate(steps[1]);
-        let instance;
-        if (typeof module.PGlite.create === "function") {
-            instance = await module.PGlite.create();
-        } else {
-            instance = new module.PGlite();
-            await instance.waitReady;
-        }
+        const instance = await createPGliteInstance();
         api.complete(
             steps[1],
             "Downloaded the runtime, started PostgreSQL",
@@ -669,6 +808,8 @@
         runtime = instance;
         runtimeVersion = version;
         platformVersion = detectedVersion;
+        currentDatabase = DEFAULT_DATABASE;
+        setPrompt(DEFAULT_DATABASE);
         api.complete(steps[2], `Verified PostgreSQL ${platformVersion}`);
     }
 
