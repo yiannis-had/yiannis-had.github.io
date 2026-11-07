@@ -430,33 +430,37 @@
   \\dn              list schemas
   \\d [schema]      list relations (tables, views, sequences) in a schema`;
 
-    const LIST_DATABASES_SQL = `select datname as name,
-       pg_get_userbyid(datdba) as owner,
-       pg_encoding_to_char(encoding) as encoding
-  from pg_database
- where datname = current_database()
- order by datname`;
+  const LIST_DATABASES_SQL = `
+    select
+      datname as name,
+      pg_get_userbyid(datdba) as owner,
+      pg_encoding_to_char(encoding) as encoding
+    from pg_database
+    order by datname`;
 
-    const LIST_SCHEMAS_SQL = `select n.nspname as name,
+  const LIST_SCHEMAS_SQL = `
+    select
+       n.nspname as name,
        pg_get_userbyid(n.nspowner) as owner
-  from pg_namespace n
- order by 1`;
+    from pg_namespace n
+    order by 1`;
 
-    const LIST_RELATIONS_SQL = `select c.relname as name,
-       case c.relkind
-         when 'r' then 'table'
-         when 'p' then 'partitioned table'
-         when 'v' then 'view'
-         when 'm' then 'materialized view'
-         when 'S' then 'sequence'
-         when 'f' then 'foreign table'
-         else c.relkind::text
-       end as type
-  from pg_class c
-  join pg_namespace n on n.oid = c.relnamespace
- where n.nspname = coalesce(nullif($1, ''), current_schema())
-   and c.relkind in ('r', 'p', 'v', 'm', 'S', 'f')
- order by 1`;
+  const LIST_RELATIONS_SQL = `
+    select c.relname as name,
+      case c.relkind
+        when 'r' then 'table'
+        when 'p' then 'partitioned table'
+        when 'v' then 'view'
+        when 'm' then 'materialized view'
+        when 'S' then 'sequence'
+        when 'f' then 'foreign table'
+        else c.relkind::text
+      end as type
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = coalesce(nullif($1, ''), current_schema())
+      and c.relkind in ('r', 'p', 'v', 'm', 'S', 'f')
+    order by 1`;
 
     let runtime = null;
     let runtimeVersion = null;
